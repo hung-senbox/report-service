@@ -12,12 +12,10 @@ import (
 var basePath string
 
 func init() {
-	// Lấy thư mục hiện tại của project (ví dụ: /Applications/Senbox/src/term-service)
 	wd, _ := os.Getwd()
 
-	// Gốc log = thư mục cha (/Applications/Senbox/src) + /Log/Term-Service
 	srcDir := filepath.Dir(wd)
-	basePath = filepath.Join(srcDir, "Log", "Term-Service")
+	basePath = filepath.Join(srcDir, "Log", "Report-Service")
 }
 
 // parseLogLevel chuyển string → logrus.Level

@@ -43,13 +43,13 @@ services:
       # - "8600:53/tcp"
     restart: unless-stopped
 
-  term-service:
+  report-service:
     build:
       context: ..
       dockerfile: Dockerfile
-    container_name: term-service
+    container_name: report-service
     ports:
-      - "8009:8009"
+      - "8012:8012"
     depends_on:
       - term_db
       - consul

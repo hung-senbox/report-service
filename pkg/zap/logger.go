@@ -2,8 +2,8 @@ package zap
 
 import (
 	"os"
-	"term-service/pkg/config"
-	"term-service/pkg/constants"
+	"report-service/pkg/config"
+	"report-service/pkg/constants"
 	"time"
 
 	"github.com/EventStore/EventStore-Client-Go/esdb"

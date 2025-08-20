@@ -6,12 +6,12 @@ import (
 
 	// "os"
 
-	"term-service/pkg/config"
-	"term-service/pkg/consul"
-	"term-service/pkg/db"
-	"term-service/pkg/router"
+	"report-service/pkg/config"
+	"report-service/pkg/consul"
+	"report-service/pkg/db"
+	"report-service/pkg/router"
 
-	"term-service/pkg/zap"
+	"report-service/pkg/zap"
 )
 
 func main() {

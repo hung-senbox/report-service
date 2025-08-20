@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"term-service/internal/user/model"
-	"term-service/pkg/constants"
-	"term-service/pkg/consul"
+	"report-service/internal/user/model"
+	"report-service/pkg/constants"
+	"report-service/pkg/consul"
 
 	"github.com/hashicorp/consul/api"
 )

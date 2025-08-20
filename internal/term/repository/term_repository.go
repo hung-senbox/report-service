@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
-	"term-service/internal/term/model"
+	"report-service/internal/term/model"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"

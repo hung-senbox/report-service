@@ -1,9 +1,9 @@
 package mappers
 
 import (
-	"term-service/internal/term/dto/response"
-	"term-service/internal/term/model"
-	"term-service/pkg/helper"
+	"report-service/internal/term/dto/response"
+	"report-service/internal/term/model"
+	"report-service/pkg/helper"
 	"time"
 )
 

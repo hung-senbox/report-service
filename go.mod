@@ -1,4 +1,4 @@
-module term-service
+module report-service
 
 go 1.24.4
 

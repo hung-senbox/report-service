@@ -1,5 +1,5 @@
 server:
-  port: "8009"
+  port: "8012"
 
 database:
   active: "mongodb" # or "mongodb"
@@ -9,14 +9,14 @@ database:
     port: "3306"
     user: "root"
     password: ""
-    name: "term_service"
+    name: "report_service"
 
   mongodb:
-    host: "term_db"
+    host: "report_db"
     port: "27017"
     # user: "Senbox"
     # password: ""
-    name: "term_service"
+    name: "report_service"
 
 consul:
     host: "localhost"

@@ -5,9 +5,9 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"report-service/pkg/config"
+	"report-service/pkg/zap"
 	"strconv"
-	"term-service/pkg/config"
-	"term-service/pkg/zap"
 	"time"
 
 	"github.com/hashicorp/consul/api"
@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	serviceName = "term-service"
+	serviceName = "report-service"
 	ttl         = time.Second * 15
-	checkId     = "term-service-health-check"
+	checkId     = "report-service-health-check"
 )
 
 var (
@@ -108,7 +108,7 @@ func (c *service) setupConsul() {
 		Name:    serviceName, // Service name
 		Port:    port,        // Service port
 		Address: hostname,    // Service address
-		Tags:    []string{"go", "term-service"},
+		Tags:    []string{"go", "report-service"},
 		Check:   check,
 	}
 

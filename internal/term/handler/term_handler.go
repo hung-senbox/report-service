@@ -6,14 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"term-service/helper"
-	"term-service/internal/term/dto/request"
-	"term-service/internal/term/dto/response"
-	"term-service/internal/term/mappers"
-	"term-service/internal/term/middleware"
-	"term-service/internal/term/model"
-	"term-service/internal/term/service"
-	pkg_helpder "term-service/pkg/helper"
+	"report-service/helper"
+	"report-service/internal/term/dto/request"
+	"report-service/internal/term/dto/response"
+	"report-service/internal/term/mappers"
+	"report-service/internal/term/middleware"
+	"report-service/internal/term/model"
+	"report-service/internal/term/service"
+	pkg_helpder "report-service/pkg/helper"
 )
 
 type TermHandler struct {

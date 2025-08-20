@@ -6,8 +6,8 @@ import (
 	// "term-info-service/pkg/constants"
 
 	"net/http"
+	"report-service/pkg/constants"
 	"strings"
-	"term-service/pkg/constants"
 
 	"github.com/gin-gonic/gin"
 	//"github.com/golang-jwt/jwt"
