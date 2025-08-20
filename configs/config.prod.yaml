@@ -1,0 +1,27 @@
+server:
+  port: "8009"
+
+database:
+  active: "mongodb" # or "mongodb"
+
+  mysql:
+    host: "localhost"
+    port: "3306"
+    user: "root"
+    password: ""
+    name: "term_service"
+
+  mongodb:
+    host: "term_db"
+    port: "27017"
+    # user: "Senbox"
+    # password: ""
+    name: "term_service"
+
+consul:
+    host: "localhost"
+    port: 8500
+    
+registry:
+  host: "localhost"
+
