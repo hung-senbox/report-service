@@ -1,9 +1,10 @@
 package router
 
 import (
-	"report-service/internal/term/handler"
-	"report-service/internal/term/repository"
-	"report-service/internal/term/service"
+	"report-service/internal/report/handler"
+	"report-service/internal/report/repository"
+	"report-service/internal/report/route"
+	"report-service/internal/report/service"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,12 +14,11 @@ func SetupRouter(mongoCollection *mongo.Collection) *gin.Engine {
 	r := gin.Default()
 
 	// Setup dependency injection
-	repo := repository.NewTermRepository(mongoCollection)
-	svc := service.NewTermService(repo)
-	h := handler.NewHandler(svc)
+	repo := repository.NewReportRepository(mongoCollection)
+	svc := service.NewReportService(repo)
+	h := handler.NewReportHandler(svc)
 
 	// Register routes
-	h.RegisterRoutes(r)
-
+	route.RegisterReportRoutes(r, h)
 	return r
 }

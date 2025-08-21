@@ -1,10 +1,7 @@
 package middleware
 
 import (
-	// "net/http"
-	// "strings"
-	// "term-info-service/pkg/constants"
-
+	"context"
 	"net/http"
 	"report-service/pkg/constants"
 	"strings"
@@ -15,16 +12,16 @@ import (
 )
 
 func Secured() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		authorizationHeader := context.GetHeader("Authorization")
+	return func(c *gin.Context) {
+		authorizationHeader := c.GetHeader("Authorization")
 
 		if len(authorizationHeader) == 0 {
-			context.AbortWithStatus(http.StatusForbidden)
+			c.AbortWithStatus(http.StatusForbidden)
 			return
 		}
 
 		if !strings.HasPrefix(authorizationHeader, "Bearer ") {
-			context.AbortWithStatus(http.StatusUnauthorized)
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
@@ -34,20 +31,24 @@ func Secured() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			if userId, ok := claims[constants.UserID].(string); ok {
-				context.Set(constants.UserID, userId)
+				c.Set(constants.UserID, userId)
 			}
 
 			if userName, ok := claims[constants.UserName].(string); ok {
-				context.Set(constants.UserName, userName)
+				c.Set(constants.UserName, userName)
 			}
 
 			if userRoles, ok := claims[constants.UserRoles].(string); ok {
-				context.Set(constants.UserRoles, userRoles)
+				c.Set(constants.UserRoles, userRoles)
 			}
 		}
+		c.Set(constants.Token, tokenString)
 
-		context.Set(constants.Token, tokenString)
-		context.Next()
+		// inject vào context chuẩn
+		ctx := context.WithValue(c.Request.Context(), constants.Token, tokenString)
+		c.Request = c.Request.WithContext(ctx)
+
+		c.Next()
 	}
 }
 
