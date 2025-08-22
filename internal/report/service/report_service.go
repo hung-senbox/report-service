@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"report-service/internal/report/dto/request"
+	"report-service/internal/report/dto/response"
+	"report-service/internal/report/mapper"
 	"report-service/internal/report/model"
 	"report-service/internal/report/repository"
 )
@@ -13,7 +15,7 @@ type ReportService interface {
 	GetByID(ctx context.Context, id string) (*model.Report, error)
 	Update(ctx context.Context, id string, report *model.Report) error
 	Delete(ctx context.Context, id string) error
-	GetAll(ctx context.Context) ([]*model.Report, error)
+	GetAll(ctx context.Context) ([]response.ReportResponse, error)
 	UploadReport(ctx context.Context, req *request.UploadReportRequestDTO) error
 }
 
@@ -59,8 +61,16 @@ func (s *reportService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *reportService) GetAll(ctx context.Context) ([]*model.Report, error) {
-	return s.repo.GetAll(ctx)
+func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, error) {
+	// Lấy danh sách report từ repository
+	reports, err := s.repo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Chuyển đổi sang DTO response
+	res := mapper.MapReportListToResDTO(reports)
+	return res, nil
 }
 
 func (s *reportService) UploadReport(ctx context.Context, req *request.UploadReportRequestDTO) error {

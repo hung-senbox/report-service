@@ -10,7 +10,7 @@ func MapReportToResDTO(report *model.Report) response.ReportResponse {
 		ID:         report.ID.Hex(),
 		Key:        report.Key,
 		Note:       report.Note,
-		ReportData: report.ReportData, // gán trực tiếp, vì đã là bson.M = map
+		ReportData: report.ReportData,
 		CreatedAt:  report.CreatedAt,
 		UpdatedAt:  report.UpdatedAt,
 	}

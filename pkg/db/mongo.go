@@ -12,7 +12,7 @@ import (
 )
 
 var MongoClient *mongo.Client
-var TermCollection *mongo.Collection
+var ReportCollection *mongo.Collection
 
 func ConnectMongoDB() {
 	d := config.AppConfig.Database.Mongo
@@ -39,6 +39,6 @@ func ConnectMongoDB() {
 		log.Fatalf("MongoDB ping failed: %v", err)
 	}
 
-	TermCollection = MongoClient.Database(d.Name).Collection("terms")
-	log.Println("Connected to MongoDB and loaded 'terms' collection")
+	ReportCollection = MongoClient.Database(d.Name).Collection("reports")
+	log.Println("Connected to MongoDB and loaded 'reports' collection")
 }
