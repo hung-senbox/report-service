@@ -15,7 +15,7 @@ func init() {
 	wd, _ := os.Getwd()
 
 	srcDir := filepath.Dir(wd)
-	basePath = filepath.Join(srcDir, "Log", "Report-Service")
+	basePath = filepath.Join(srcDir, "Log")
 }
 
 // parseLogLevel chuyển string → logrus.Level
