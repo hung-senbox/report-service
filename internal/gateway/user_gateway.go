@@ -88,3 +88,34 @@ func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*dto.CurrentUser,
 
 	return &gwResp.Data, nil
 }
+
+// GetStudentInfo
+func (g *userGatewayImpl) GetStudentInfo(ctx context.Context, studentID string) (*dto.StudentResponse, error) {
+	token, ok := ctx.Value(constants.Token).(string)
+	if !ok {
+		return nil, fmt.Errorf("token not found in context")
+	}
+
+	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
+	if err != nil {
+		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
+	}
+
+	resp, err := client.Call("GET", "/v1/gateway/students/"+studentID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("call API student fail: %w", err)
+	}
+
+	// Unmarshal response theo format Gateway
+	var gwResp dto.APIGateWayResponse[dto.StudentResponse]
+	if err := json.Unmarshal(resp, &gwResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response fail: %w", err)
+	}
+
+	// Check status_code trả về
+	if gwResp.StatusCode != 200 {
+		return nil, fmt.Errorf("gateway error: %s", gwResp.Message)
+	}
+
+	return &gwResp.Data, nil
+}

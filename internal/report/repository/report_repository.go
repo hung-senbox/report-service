@@ -17,6 +17,7 @@ type ReportRepository interface {
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]*model.Report, error)
 	CreateOrUpdate(ctx context.Context, report *model.Report) error
+	GetByStudentTopicTerm(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error)
 }
 
 type reportRepository struct {
@@ -97,6 +98,7 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 	update := bson.M{
 		"$set": bson.M{
 			"student_id":  report.StudentID,
+			"editor_id":   report.EditorID,
 			"topic_id":    report.TopicID,
 			"term_id":     report.TermID,
 			"language":    report.Language,
@@ -115,4 +117,23 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 	opts := options.Update().SetUpsert(true)
 	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
+}
+
+func (r *reportRepository) GetByStudentTopicTerm(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error) {
+	filter := bson.M{
+		"student_id": studentID,
+		"topic_id":   topicID,
+		"term_id":    termID,
+		"language":   language,
+	}
+
+	var report model.Report
+	err := r.collection.FindOne(ctx, filter).Decode(&report)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // không tìm thấy -> return nil
+		}
+		return nil, err
+	}
+	return &report, nil
 }

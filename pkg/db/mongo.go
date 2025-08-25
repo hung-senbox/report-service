@@ -13,6 +13,7 @@ import (
 
 var MongoClient *mongo.Client
 var ReportCollection *mongo.Collection
+var ReportHistoryCollection *mongo.Collection
 
 func ConnectMongoDB() {
 	d := config.AppConfig.Database.Mongo
@@ -40,5 +41,6 @@ func ConnectMongoDB() {
 	}
 
 	ReportCollection = MongoClient.Database(d.Name).Collection("reports")
+	ReportHistoryCollection = MongoClient.Database(d.Name).Collection("report_histories")
 	log.Println("Connected to MongoDB and loaded 'reports' collection")
 }

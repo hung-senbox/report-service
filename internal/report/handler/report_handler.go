@@ -41,3 +41,30 @@ func (h *ReportHandler) GetAllReports(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Reports retrieved successfully", reports)
 }
+
+func (h *ReportHandler) GetReport(c *gin.Context) {
+	// get report by student_id, topic_id, term_id, language from search params
+	studentID := c.Query("student_id")
+	topicID := c.Query("topic_id")
+	termID := c.Query("term_id")
+	language := c.Query("language")
+
+	if studentID == "" || topicID == "" || termID == "" || language == "" {
+		helper.SendError(c, http.StatusBadRequest, nil, "student_id, topic_id, term_id and language are required")
+		return
+	}
+
+	var req request.GetReportRequest
+	req.StudentID = studentID
+	req.TopicID = topicID
+	req.TermID = termID
+	req.Language = language
+
+	report, err := h.service.Get4Report(c.Request.Context(), &req)
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", report)
+}

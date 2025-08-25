@@ -9,6 +9,7 @@ import (
 
 type Report struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	EditorID   string             `bson:"editor_id,omitempty"`
 	StudentID  string             `bson:"student_id"`
 	TopicID    string             `bson:"topic_id"`
 	TermID     string             `bson:"term_id"`

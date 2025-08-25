@@ -18,4 +18,15 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler) {
 			reportsAdmin.GET("", h.GetAllReports)
 		}
 	}
+
+	// user routes
+	userGroup := r.Group("/api/v1/user")
+	userGroup.Use(middleware.Secured())
+	{
+		reportsUser := userGroup.Group("/reports")
+		{
+			reportsUser.POST("", h.UploadReport)
+			reportsUser.GET("", h.GetAllReports)
+		}
+	}
 }

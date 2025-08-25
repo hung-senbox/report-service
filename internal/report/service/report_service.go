@@ -8,6 +8,10 @@ import (
 	"report-service/internal/report/mapper"
 	"report-service/internal/report/model"
 	"report-service/internal/report/repository"
+	"report-service/pkg/constants"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ReportService interface {
@@ -16,14 +20,22 @@ type ReportService interface {
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]response.ReportResponse, error)
 	UploadReport(ctx context.Context, req *request.UploadReportRequestDTO) error
+	Get4Report(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
 }
 
 type reportService struct {
-	repo repository.ReportRepository
+	repo        repository.ReportRepository
+	historyRepo repository.ReportHistoryRepository
 }
 
-func NewReportService(repo repository.ReportRepository) ReportService {
-	return &reportService{repo: repo}
+func NewReportService(
+	repo repository.ReportRepository,
+	historyRepo repository.ReportHistoryRepository,
+) ReportService {
+	return &reportService{
+		repo:        repo,
+		historyRepo: historyRepo,
+	}
 }
 
 func (s *reportService) Create(ctx context.Context, report *model.Report) (*model.Report, error) {
@@ -60,7 +72,6 @@ func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, 
 }
 
 func (s *reportService) UploadReport(ctx context.Context, req *request.UploadReportRequestDTO) error {
-
 	report := &model.Report{
 		StudentID:  req.StudentID,
 		TopicID:    req.TopicID,
@@ -71,6 +82,38 @@ func (s *reportService) UploadReport(ctx context.Context, req *request.UploadRep
 		ReportData: req.ReportData,
 	}
 
-	// create or update
-	return s.repo.CreateOrUpdate(ctx, report)
+	// get editor_id from context (from middleware)
+	if editorID, ok := ctx.Value(constants.UserID).(string); ok {
+		report.EditorID = editorID
+	}
+
+	// create or update report
+	err := s.repo.CreateOrUpdate(ctx, report)
+	if err != nil {
+		return err
+	}
+
+	// save report history
+	history := &model.ReportHistory{
+		ID:        primitive.NewObjectID(),
+		ReportID:  report.ID,
+		EditorID:  report.EditorID,
+		Report:    report,
+		Timestamp: time.Now().Unix(),
+	}
+
+	if err := s.historyRepo.Create(ctx, history); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *reportService) Get4Report(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
+	report, err := s.repo.GetByStudentTopicTerm(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
+	if err != nil {
+		return response.ReportResponse{}, err
+	}
+	return mapper.MapReportToResDTO(report), nil
+
 }

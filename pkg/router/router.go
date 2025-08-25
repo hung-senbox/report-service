@@ -10,12 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(mongoCollection *mongo.Collection) *gin.Engine {
+func SetupRouter(reportCollection *mongo.Collection, reportHistoryCollection *mongo.Collection) *gin.Engine {
 	r := gin.Default()
 
 	// Setup dependency injection
-	repo := repository.NewReportRepository(mongoCollection)
-	svc := service.NewReportService(repo)
+	reportRepo := repository.NewReportRepository(reportCollection)
+	historyRepo := repository.NewReportHistoryRepository(reportHistoryCollection)
+	svc := service.NewReportService(reportRepo, historyRepo)
 	h := handler.NewReportHandler(svc)
 
 	// Register routes
