@@ -49,7 +49,7 @@ services:
       dockerfile: Dockerfile
     container_name: report-service
     ports:
-      - "8017:8017"
+      - "8018:8018"
     depends_on:
       - term_db
       - consul
