@@ -9,7 +9,7 @@ import (
 const (
 	ErrInvalidOperation = "ERR_INVALID_OPERATION"
 	ErrInvalidRequest   = "ERR_INVALID_REQUEST"
-	ErrNotFount         = "ERR_NOT_FOUND"
+	ErrNotFound         = "ERR_NOT_FOUND"
 	ErrInternal         = "ERR_INTERNAL"
 )
 

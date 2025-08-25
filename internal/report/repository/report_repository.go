@@ -131,7 +131,7 @@ func (r *reportRepository) GetByStudentTopicTerm(ctx context.Context, studentID,
 	err := r.collection.FindOne(ctx, filter).Decode(&report)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil // không tìm thấy -> return nil
+			return nil, err
 		}
 		return nil, err
 	}

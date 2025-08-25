@@ -114,6 +114,8 @@ func (s *reportService) Get4Report(ctx context.Context, req *request.GetReportRe
 	if err != nil {
 		return response.ReportResponse{}, err
 	}
+	if report == nil {
+		return response.ReportResponse{}, errors.New("report not found")
+	}
 	return mapper.MapReportToResDTO(report), nil
-
 }
