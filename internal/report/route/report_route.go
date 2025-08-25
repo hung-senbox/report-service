@@ -26,7 +26,8 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler) {
 		reportsUser := userGroup.Group("/reports")
 		{
 			reportsUser.POST("", h.UploadReport)
-			reportsUser.GET("", h.GetAllReports)
+			reportsUser.GET("", h.GetReport)
+
 		}
 	}
 }
