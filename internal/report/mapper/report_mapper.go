@@ -8,7 +8,11 @@ import (
 func MapReportToResDTO(report *model.Report) response.ReportResponse {
 	return response.ReportResponse{
 		ID:         report.ID.Hex(),
-		Key:        report.Key,
+		StudentID:  report.StudentID,
+		TopicID:    report.TopicID,
+		TermID:     report.TermID,
+		Language:   report.Language,
+		Status:     report.Status,
 		Note:       report.Note,
 		ReportData: report.ReportData,
 		CreatedAt:  report.CreatedAt,

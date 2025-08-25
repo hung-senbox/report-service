@@ -14,7 +14,6 @@ import (
 type ReportRepository interface {
 	Create(ctx context.Context, report *model.Report) (*model.Report, error)
 	GetByID(ctx context.Context, id string) (*model.Report, error)
-	Update(ctx context.Context, id string, report *model.Report) error
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]*model.Report, error)
 	CreateOrUpdate(ctx context.Context, report *model.Report) error
@@ -55,27 +54,6 @@ func (r *reportRepository) GetByID(ctx context.Context, id string) (*model.Repor
 	return &report, nil
 }
 
-func (r *reportRepository) Update(ctx context.Context, id string, report *model.Report) error {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-
-	report.UpdatedAt = time.Now()
-	update := bson.M{
-		"key":         report.Key,
-		"note":        report.Note,
-		"report_data": report.ReportData,
-		"updated_at":  report.UpdatedAt,
-	}
-
-	_, err = r.collection.UpdateOne(ctx,
-		bson.M{"_id": objID},
-		bson.M{"$set": update},
-	)
-	return err
-}
-
 func (r *reportRepository) Delete(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -109,9 +87,20 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 		report.CreatedAt = now
 	}
 
-	filter := bson.M{"key": report.Key}
+	// filter theo bộ unique (student_id + topic_id + term_id)
+	filter := bson.M{
+		"student_id": report.StudentID,
+		"topic_id":   report.TopicID,
+		"term_id":    report.TermID,
+	}
+
 	update := bson.M{
 		"$set": bson.M{
+			"student_id":  report.StudentID,
+			"topic_id":    report.TopicID,
+			"term_id":     report.TermID,
+			"language":    report.Language,
+			"status":      report.Status,
 			"note":        report.Note,
 			"report_data": report.ReportData,
 			"updated_at":  report.UpdatedAt,
@@ -119,7 +108,6 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 		"$setOnInsert": bson.M{
 			"_id":        report.ID,
 			"created_at": report.CreatedAt,
-			"key":        report.Key,
 		},
 	}
 

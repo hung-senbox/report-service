@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"report-service/logger"
 	"report-service/pkg/consul"
 
 	"github.com/hashicorp/consul/api"
@@ -44,6 +45,10 @@ func NewGatewayClient(serviceName, token string, consulClient *api.Client, httpC
 func (c *GatewayClient) Call(method, path string, body interface{}) ([]byte, error) {
 	service, err := c.ServiceDiscovery.DiscoverService()
 	if err != nil {
+		logger.WriteLogEx("error", "service discovery failed", map[string]any{
+			"service": c.ServiceName,
+			"error":   err.Error(),
+		})
 		return nil, fmt.Errorf("service discovery failed: %v", err)
 	}
 
@@ -51,6 +56,10 @@ func (c *GatewayClient) Call(method, path string, body interface{}) ([]byte, err
 	if body != nil {
 		jsonBytes, err := json.Marshal(body)
 		if err != nil {
+			logger.WriteLogEx("error", "marshal body failed", map[string]any{
+				"service": c.ServiceName,
+				"error":   err.Error(),
+			})
 			return nil, fmt.Errorf("marshal body failed: %v", err)
 		}
 		reqBody = bytes.NewReader(jsonBytes)
@@ -60,6 +69,11 @@ func (c *GatewayClient) Call(method, path string, body interface{}) ([]byte, err
 
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
+		logger.WriteLogEx("error", "create request failed", map[string]any{
+			"service": c.ServiceName,
+			"url":     url,
+			"error":   err.Error(),
+		})
 		return nil, fmt.Errorf("create request failed: %v", err)
 	}
 
@@ -70,13 +84,36 @@ func (c *GatewayClient) Call(method, path string, body interface{}) ([]byte, err
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
+		logger.WriteLogEx("error", "http call failed", map[string]any{
+			"service": c.ServiceName,
+			"url":     url,
+			"method":  method,
+			"error":   err.Error(),
+		})
 		return nil, fmt.Errorf("http call failed: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
+		logger.WriteLogEx("warn", "http error", map[string]any{
+			"service":     c.ServiceName,
+			"url":         url,
+			"method":      method,
+			"status_code": resp.StatusCode,
+		})
 		return nil, fmt.Errorf("http error: %s", resp.Status)
 	}
 
-	return io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.WriteLogEx("error", "read response body failed", map[string]any{
+			"service": c.ServiceName,
+			"url":     url,
+			"method":  method,
+			"error":   err.Error(),
+		})
+		return nil, fmt.Errorf("read response body failed: %v", err)
+	}
+
+	return data, nil
 }

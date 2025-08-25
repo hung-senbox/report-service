@@ -1,7 +1,11 @@
 package request
 
 type UploadReportRequestDTO struct {
-	Key        string                 `json:"key" binding:"required"`
-	Note       string                 `json:"note,omitempty"`
+	StudentID  string                 `json:"student_id" binding:"required"`
+	TopicID    string                 `json:"topic_id" binding:"required"`
+	TermID     string                 `json:"term_id" binding:"required"`
+	Language   string                 `json:"language" binding:"required"`
+	Status     string                 `json:"status" binding:"required"`
+	Note       map[string]interface{} `json:"note,omitempty"`
 	ReportData map[string]interface{} `json:"report_data" binding:"required"`
 }
