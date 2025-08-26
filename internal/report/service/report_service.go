@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"report-service/internal/gateway"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
 	"report-service/internal/report/mapper"
@@ -24,15 +25,18 @@ type ReportService interface {
 }
 
 type reportService struct {
+	userGateway gateway.UserGateway
 	repo        repository.ReportRepository
 	historyRepo repository.ReportHistoryRepository
 }
 
 func NewReportService(
+	userGateway gateway.UserGateway,
 	repo repository.ReportRepository,
 	historyRepo repository.ReportHistoryRepository,
 ) ReportService {
 	return &reportService{
+		userGateway: userGateway,
 		repo:        repo,
 		historyRepo: historyRepo,
 	}
@@ -68,6 +72,16 @@ func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, 
 
 	// Chuyển đổi sang DTO response
 	res := mapper.MapReportListToResDTO(reports)
+
+	// get editor info for each report
+
+	for i, report := range reports {
+		editor, _ := s.userGateway.GetTeacherByUser(ctx, report.EditorID)
+
+		if editor != nil {
+			res[i].Editor = *editor
+		}
+	}
 	return res, nil
 }
 

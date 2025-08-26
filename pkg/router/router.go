@@ -1,24 +1,29 @@
 package router
 
 import (
+	"report-service/internal/gateway"
 	"report-service/internal/report/handler"
 	"report-service/internal/report/repository"
 	"report-service/internal/report/route"
 	"report-service/internal/report/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/consul/api"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(reportCollection *mongo.Collection, reportHistoryCollection *mongo.Collection) *gin.Engine {
+func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, reportHistoryCollection *mongo.Collection) *gin.Engine {
 	r := gin.Default()
+
+	// gateway
+	userGateway := gateway.NewUserGateway("go-main-service", consulClient)
 
 	// Setup dependency injection
 	reportRepo := repository.NewReportRepository(reportCollection)
 	historyRepo := repository.NewReportHistoryRepository(reportHistoryCollection)
 
 	// reoport
-	reportService := service.NewReportService(reportRepo, historyRepo)
+	reportService := service.NewReportService(userGateway, reportRepo, historyRepo)
 	reportHandler := handler.NewReportHandler(reportService)
 
 	// report history

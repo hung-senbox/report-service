@@ -6,6 +6,7 @@ import (
 )
 
 func MapReportToResDTO(report *model.Report) response.ReportResponse {
+	// get editor info
 	return response.ReportResponse{
 		ID:         report.ID.Hex(),
 		StudentID:  report.StudentID,
@@ -16,7 +17,6 @@ func MapReportToResDTO(report *model.Report) response.ReportResponse {
 		Note:       report.Note,
 		ReportData: report.ReportData,
 		CreatedAt:  report.CreatedAt,
-		UpdatedAt:  report.UpdatedAt,
 	}
 }
 

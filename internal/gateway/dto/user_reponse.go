@@ -29,14 +29,6 @@ type CurrentUser struct {
 	Avatars []Avatar `json:"avatars"`
 }
 
-type Avatar struct {
-	ImageID  uint64 `json:"image_id"`
-	ImageKey string `json:"image_key"`
-	ImageUrl string `json:"image_url"`
-	Index    int    `json:"index"`
-	IsMain   bool   `json:"is_main"`
-}
-
 type Role struct {
 	ID       int64  `json:"id"`
 	RoleName string `json:"role"`
@@ -65,4 +57,10 @@ type UserOrganizationActive struct {
 	DefaultOrganization []OrganizationActive `json:"default_organization"`
 	TeacherOrganization []OrganizationActive `json:"teacher_organization"`
 	StaffOrganization   []OrganizationActive `json:"staff_organization"`
+}
+
+type UserInfo struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Avatar Avatar `json:"avatar"`
 }
