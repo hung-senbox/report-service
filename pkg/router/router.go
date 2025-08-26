@@ -16,10 +16,16 @@ func SetupRouter(reportCollection *mongo.Collection, reportHistoryCollection *mo
 	// Setup dependency injection
 	reportRepo := repository.NewReportRepository(reportCollection)
 	historyRepo := repository.NewReportHistoryRepository(reportHistoryCollection)
-	svc := service.NewReportService(reportRepo, historyRepo)
-	h := handler.NewReportHandler(svc)
+
+	// reoport
+	reportService := service.NewReportService(reportRepo, historyRepo)
+	reportHandler := handler.NewReportHandler(reportService)
+
+	// report history
+	reportHistoryService := service.NewReportHistoryService(historyRepo)
+	reportHistoryHandler := handler.NewReportHistoryHandler(reportHistoryService)
 
 	// Register routes
-	route.RegisterReportRoutes(r, h)
+	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler)
 	return r
 }
