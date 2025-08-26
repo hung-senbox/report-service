@@ -45,22 +45,11 @@ func (h *ReportHandler) GetAllReports(c *gin.Context) {
 }
 
 func (h *ReportHandler) GetReport(c *gin.Context) {
-	// get report by student_id, topic_id, term_id, language from search params
-	studentID := c.Query("student_id")
-	topicID := c.Query("topic_id")
-	termID := c.Query("term_id")
-	language := c.Query("language")
-
-	if studentID == "" || topicID == "" || termID == "" || language == "" {
-		helper.SendError(c, http.StatusBadRequest, nil, "student_id, topic_id, term_id and language are required")
+	var req request.GetReportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
-
-	var req request.GetReportRequest
-	req.StudentID = studentID
-	req.TopicID = topicID
-	req.TermID = termID
-	req.Language = language
 
 	report, err := h.service.Get4Report(c.Request.Context(), &req)
 	if err != nil {
@@ -76,22 +65,11 @@ func (h *ReportHandler) GetReport(c *gin.Context) {
 }
 
 func (h *ReportHandler) GetReport4Admin(c *gin.Context) {
-	// get report by student_id, topic_id, term_id, language from search params
-	studentID := c.Query("student_id")
-	topicID := c.Query("topic_id")
-	termID := c.Query("term_id")
-	language := c.Query("language")
-
-	if studentID == "" || topicID == "" || termID == "" || language == "" {
-		helper.SendError(c, http.StatusBadRequest, nil, "student_id, topic_id, term_id and language are required")
+	var req request.GetReportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
-
-	var req request.GetReportRequest
-	req.StudentID = studentID
-	req.TopicID = topicID
-	req.TermID = termID
-	req.Language = language
 
 	report, err := h.service.GetReport4Admin(c.Request.Context(), &req)
 	if err != nil {

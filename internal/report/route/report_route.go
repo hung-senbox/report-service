@@ -15,7 +15,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 		reportsAdmin := adminGroup.Group("/reports")
 		{
 			reportsAdmin.POST("", h.UploadReport)
-			reportsAdmin.GET("", h.GetReport4Admin)
+			reportsAdmin.POST("", h.GetReport4Admin)
 
 			// report history
 			reportsAdmin.GET("/history", rh.GetAllReportHistory)
@@ -29,7 +29,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 		reportsUser := userGroup.Group("/reports")
 		{
 			reportsUser.POST("", h.UploadReport) // app user upload report
-			reportsUser.GET("", h.GetReport)     // get report by student_id, topic_id, term_id, language
+			reportsUser.POST("", h.GetReport)    // get report by student_id, topic_id, term_id, language
 
 		}
 	}
