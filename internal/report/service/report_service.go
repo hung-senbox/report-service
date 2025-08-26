@@ -22,6 +22,7 @@ type ReportService interface {
 	GetAll(ctx context.Context) ([]response.ReportResponse, error)
 	UploadReport(ctx context.Context, req *request.UploadReportRequestDTO) error
 	Get4Report(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
+	GetReport4Admin(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
 }
 
 type reportService struct {
@@ -132,4 +133,22 @@ func (s *reportService) Get4Report(ctx context.Context, req *request.GetReportRe
 		return response.ReportResponse{}, errors.New("report not found")
 	}
 	return mapper.MapReportToResDTO(report), nil
+}
+
+func (s *reportService) GetReport4Admin(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
+	report, err := s.repo.GetByStudentTopicTerm(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
+	if err != nil {
+		return response.ReportResponse{}, err
+	}
+	if report == nil {
+		return response.ReportResponse{}, errors.New("report not found")
+	}
+	res := mapper.MapReportToResDTO(report)
+
+	// get editor info
+	editor, _ := s.userGateway.GetTeacherByUser(ctx, report.EditorID)
+	if editor != nil {
+		res.Editor = *editor
+	}
+	return res, nil
 }

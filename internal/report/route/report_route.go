@@ -15,7 +15,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 		reportsAdmin := adminGroup.Group("/reports")
 		{
 			reportsAdmin.POST("", h.UploadReport)
-			reportsAdmin.GET("", h.GetAllReports)
+			reportsAdmin.GET("", h.GetReport4Admin)
 
 			// report history
 			reportsAdmin.GET("/history", rh.GetAllReportHistory)
