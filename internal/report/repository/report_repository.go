@@ -93,6 +93,7 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 		"student_id": report.StudentID,
 		"topic_id":   report.TopicID,
 		"term_id":    report.TermID,
+		"language":   report.Language,
 	}
 
 	update := bson.M{
