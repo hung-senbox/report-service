@@ -20,7 +20,9 @@ type UserGateway interface {
 	GetAuthorInfo(ctx context.Context, userID string) (*User, error)
 	GetCurrentUser(ctx context.Context) (*dto.CurrentUser, error)
 	GetUserInfo(ctx context.Context, userID string) (*dto.UserInfo, error)
-	GetTeacherByUser(ctx context.Context, userID string) (*dto.TeacherResponse, error)
+	GetStudentInfo(ctx context.Context, studentID string) (*dto.StudentResponse, error)
+	GetTeachersByUser(ctx context.Context, userID string) ([]*dto.TeacherResponse, error)
+	GetTeacherByUserAndOrganization(ctx context.Context, userID string, organizationID string) (*dto.TeacherResponse, error)
 }
 
 type userGatewayImpl struct {
@@ -154,7 +156,7 @@ func (g *userGatewayImpl) GetUserInfo(ctx context.Context, userID string) (*dto.
 }
 
 // get teacher by user
-func (g *userGatewayImpl) GetTeacherByUser(ctx context.Context, userID string) (*dto.TeacherResponse, error) {
+func (g *userGatewayImpl) GetTeachersByUser(ctx context.Context, userID string) ([]*dto.TeacherResponse, error) {
 	token, ok := ctx.Value(constants.Token).(string)
 	if !ok {
 		return nil, fmt.Errorf("token not found in context")
@@ -171,7 +173,7 @@ func (g *userGatewayImpl) GetTeacherByUser(ctx context.Context, userID string) (
 	}
 
 	// Unmarshal response theo format Gateway
-	var gwResp dto.APIGateWayResponse[dto.TeacherResponse]
+	var gwResp dto.APIGateWayResponse[[]*dto.TeacherResponse]
 	if err := json.Unmarshal(resp, &gwResp); err != nil {
 		return nil, fmt.Errorf("unmarshal response fail: %w", err)
 	}
@@ -181,5 +183,36 @@ func (g *userGatewayImpl) GetTeacherByUser(ctx context.Context, userID string) (
 		return nil, fmt.Errorf("gateway error: %s", gwResp.Message)
 	}
 
-	return &gwResp.Data, nil
+	return gwResp.Data, nil
+}
+
+// get teacher by user
+func (g *userGatewayImpl) GetTeacherByUserAndOrganization(ctx context.Context, userID string, organizationID string) (*dto.TeacherResponse, error) {
+	token, ok := ctx.Value(constants.Token).(string)
+	if !ok {
+		return nil, fmt.Errorf("token not found in context")
+	}
+
+	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
+	if err != nil {
+		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
+	}
+
+	resp, err := client.Call("GET", "/v1/gateway/teachers/organization/"+organizationID+"/user/"+userID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("call API get teacher by user fail: %w", err)
+	}
+
+	// Unmarshal response theo format Gateway
+	var gwResp dto.APIGateWayResponse[*dto.TeacherResponse]
+	if err := json.Unmarshal(resp, &gwResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response fail: %w", err)
+	}
+
+	// Check status_code trả về
+	if gwResp.StatusCode != 200 {
+		return nil, fmt.Errorf("gateway error: %s", gwResp.Message)
+	}
+
+	return gwResp.Data, nil
 }

@@ -77,7 +77,9 @@ func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, 
 	// get editor info for each report
 
 	for i, report := range reports {
-		editor, _ := s.userGateway.GetTeacherByUser(ctx, report.EditorID)
+		// get student info
+		student, _ := s.userGateway.GetStudentInfo(ctx, report.StudentID)
+		editor, _ := s.userGateway.GetTeacherByUserAndOrganization(ctx, report.EditorID, student.OrganizationID)
 
 		if editor != nil {
 			res[i].Editor = *editor
@@ -146,7 +148,8 @@ func (s *reportService) GetReport4Admin(ctx context.Context, req *request.GetRep
 	res := mapper.MapReportToResDTO(report)
 
 	// get editor info
-	editor, _ := s.userGateway.GetTeacherByUser(ctx, report.EditorID)
+	student, _ := s.userGateway.GetStudentInfo(ctx, report.StudentID)
+	editor, _ := s.userGateway.GetTeacherByUserAndOrganization(ctx, report.EditorID, student.OrganizationID)
 	if editor != nil {
 		res.Editor = *editor
 	}
