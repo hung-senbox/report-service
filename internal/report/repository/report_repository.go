@@ -17,7 +17,8 @@ type ReportRepository interface {
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]*model.Report, error)
 	CreateOrUpdate(ctx context.Context, report *model.Report) error
-	GetByStudentTopicTerm(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error)
+	GetByStudentTopicTermAndLanguage(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error)
+	GetByStudentTopicTermLanguageAndEditor(ctx context.Context, studentID, topicID, termID, language, editorID string) (*model.Report, error)
 }
 
 type reportRepository struct {
@@ -120,12 +121,32 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 	return err
 }
 
-func (r *reportRepository) GetByStudentTopicTerm(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error) {
+func (r *reportRepository) GetByStudentTopicTermAndLanguage(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error) {
 	filter := bson.M{
 		"student_id": studentID,
 		"topic_id":   topicID,
 		"term_id":    termID,
 		"language":   language,
+	}
+
+	var report model.Report
+	err := r.collection.FindOne(ctx, filter).Decode(&report)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, err
+		}
+		return nil, err
+	}
+	return &report, nil
+}
+
+func (r *reportRepository) GetByStudentTopicTermLanguageAndEditor(ctx context.Context, studentID, topicID, termID, language, editorID string) (*model.Report, error) {
+	filter := bson.M{
+		"student_id": studentID,
+		"topic_id":   topicID,
+		"term_id":    termID,
+		"language":   language,
+		"editor_id":  editorID,
 	}
 
 	var report model.Report

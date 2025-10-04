@@ -20,9 +20,9 @@ type ReportService interface {
 	GetByID(ctx context.Context, id string) (*model.Report, error)
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]response.ReportResponse, error)
-	UploadReport(ctx context.Context, req *request.UploadReportRequestDTO) error
-	Get4Report(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
-	GetReport4Admin(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
+	UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error
+	GetReport4App(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
+	GetReport4Web(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
 }
 
 type reportService struct {
@@ -88,7 +88,7 @@ func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, 
 	return res, nil
 }
 
-func (s *reportService) UploadReport(ctx context.Context, req *request.UploadReportRequestDTO) error {
+func (s *reportService) UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error {
 	report := &model.Report{
 		StudentID:  req.StudentID,
 		TopicID:    req.TopicID,
@@ -126,8 +126,8 @@ func (s *reportService) UploadReport(ctx context.Context, req *request.UploadRep
 	return nil
 }
 
-func (s *reportService) Get4Report(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
-	report, err := s.repo.GetByStudentTopicTerm(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
+func (s *reportService) GetReport4App(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
+	report, err := s.repo.GetByStudentTopicTermAndLanguage(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
 	if err != nil {
 		return response.ReportResponse{}, err
 	}
@@ -137,21 +137,22 @@ func (s *reportService) Get4Report(ctx context.Context, req *request.GetReportRe
 	return mapper.MapReportToResDTO(report), nil
 }
 
-func (s *reportService) GetReport4Admin(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
-	report, err := s.repo.GetByStudentTopicTerm(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
+func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
+	// get edtior by teacher id
+	editor, err := s.userGateway.GetUserByTeacher(ctx, req.TeacherID)
+	if err != nil {
+		return response.ReportResponse{}, err
+	}
+
+	report, err := s.repo.GetByStudentTopicTermLanguageAndEditor(ctx, req.StudentID, req.TopicID, req.TermID, req.Language, editor.ID)
 	if err != nil {
 		return response.ReportResponse{}, err
 	}
 	if report == nil {
 		return response.ReportResponse{}, errors.New("report not found")
 	}
+
 	res := mapper.MapReportToResDTO(report)
 
-	// get editor info
-	student, _ := s.userGateway.GetStudentInfo(ctx, report.StudentID)
-	editor, _ := s.userGateway.GetTeacherByUserAndOrganization(ctx, report.EditorID, student.OrganizationID)
-	if editor != nil {
-		res.Editor = *editor
-	}
 	return res, nil
 }

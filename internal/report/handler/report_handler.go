@@ -19,14 +19,14 @@ func NewReportHandler(s service.ReportService) *ReportHandler {
 	return &ReportHandler{service: s}
 }
 
-func (h *ReportHandler) UploadReport(c *gin.Context) {
-	var req request.UploadReportRequestDTO
+func (h *ReportHandler) UploadReport4App(c *gin.Context) {
+	var req request.UploadReport4AppRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
 
-	if err := h.service.UploadReport(c.Request.Context(), &req); err != nil {
+	if err := h.service.UploadReport4App(c.Request.Context(), &req); err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
 		return
 	}
@@ -44,14 +44,14 @@ func (h *ReportHandler) GetAllReports(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusOK, "Reports retrieved successfully", reports)
 }
 
-func (h *ReportHandler) GetReport(c *gin.Context) {
+func (h *ReportHandler) GetReport4App(c *gin.Context) {
 	var req request.GetReportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
 
-	report, err := h.service.Get4Report(c.Request.Context(), &req)
+	report, err := h.service.GetReport4App(c.Request.Context(), &req)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			helper.SendSuccess(c, http.StatusNotFound, "Report not found", nil)
@@ -64,14 +64,14 @@ func (h *ReportHandler) GetReport(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", report)
 }
 
-func (h *ReportHandler) GetReport4Admin(c *gin.Context) {
+func (h *ReportHandler) GetReport4Web(c *gin.Context) {
 	var req request.GetReportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
 
-	report, err := h.service.GetReport4Admin(c.Request.Context(), &req)
+	report, err := h.service.GetReport4Web(c.Request.Context(), &req)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			helper.SendSuccess(c, http.StatusNotFound, "Report not found", nil)
