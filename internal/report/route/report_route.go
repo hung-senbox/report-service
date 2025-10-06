@@ -30,7 +30,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 		{
 			reportsUser.POST("", h.UploadReport4App)
 			reportsUser.POST("/get-report", h.GetReport4App)
-			reportsUser.GET("/tasks/teacher/:teacherID", h.GetTeacherReportTasks)
+			reportsUser.GET("/tasks", h.GetTeacherReportTasks)
 		}
 	}
 }

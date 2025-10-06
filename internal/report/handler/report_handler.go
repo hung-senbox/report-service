@@ -85,14 +85,8 @@ func (h *ReportHandler) GetReport4Web(c *gin.Context) {
 }
 
 func (h *ReportHandler) GetTeacherReportTasks(c *gin.Context) {
-	teacherID := c.Param("teacherID")
 
-	if teacherID == "" {
-		helper.SendError(c, http.StatusBadRequest, errors.New("teacherID is required"), helper.ErrInvalidRequest)
-		return
-	}
-
-	reports, err := h.service.GetTeacherReportTasks(c.Request.Context(), teacherID)
+	reports, err := h.service.GetTeacherReportTasks(c.Request.Context())
 	if err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
 		return

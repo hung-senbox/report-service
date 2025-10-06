@@ -27,7 +27,7 @@ type ReportService interface {
 	UploadReport4Web(ctx context.Context, req *request.UploadReport4AWebRequest) error
 	GetReport4App(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
 	GetReport4Web(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
-	GetTeacherReportTasks(ctx context.Context, teacherID string) ([]response.GetTeacherReportTasksResponse, error)
+	GetTeacherReportTasks(ctx context.Context) ([]response.GetTeacherReportTasksResponse, error)
 }
 
 type reportService struct {
@@ -169,15 +169,10 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 	return res, nil
 }
 
-func (s *reportService) GetTeacherReportTasks(ctx context.Context, teacherID string) ([]response.GetTeacherReportTasksResponse, error) {
-	// Lấy thông tin editor từ teacherID
-	editor, err := s.userGateway.GetUserByTeacher(ctx, teacherID)
-	if err != nil {
-		return nil, fmt.Errorf("get teacher failed: %w", err)
-	}
-
+func (s *reportService) GetTeacherReportTasks(ctx context.Context) ([]response.GetTeacherReportTasksResponse, error) {
+	userID := helper.GetUserID(ctx)
 	// Lấy tất cả reports do editor này phụ trách
-	reports, err := s.repo.GetAllByEditorID(ctx, editor.ID)
+	reports, err := s.repo.GetAllByEditorID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get reports failed: %w", err)
 	}
