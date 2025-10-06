@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"report-service/helper"
 	gw_response "report-service/internal/gateway/dto/response"
 	"report-service/pkg/constants"
 
@@ -41,8 +42,9 @@ func (g *termGateway) GetTermByID(ctx context.Context, termID string) (*gw_respo
 	}
 
 	// gọi API với query params
+	headers := helper.GetHeaders(ctx)
 	url := fmt.Sprintf("/api/v1/gateway/terms/%s", termID)
-	resp, err := client.Call("GET", url, nil)
+	resp, err := client.Call("GET", url, nil, headers)
 	if err != nil {
 		return nil, err
 	}

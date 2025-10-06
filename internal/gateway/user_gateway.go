@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"report-service/helper"
 	gw_response "report-service/internal/gateway/dto/response"
 	"report-service/pkg/constants"
 
@@ -50,7 +51,8 @@ func (g *userGatewayImpl) GetAuthorInfo(ctx context.Context, userID string) (*Us
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/user/"+userID, nil)
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("GET", "/v1/user/"+userID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("Call API user fail: %w", err)
 	}
@@ -75,7 +77,8 @@ func (g *userGatewayImpl) GetCurrentUser(ctx context.Context) (*gw_response.Curr
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/user/current-user", nil)
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("GET", "/v1/user/current-user", nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API user fail: %w", err)
 	}
@@ -106,7 +109,8 @@ func (g *userGatewayImpl) GetStudentInfo(ctx context.Context, studentID string) 
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/gateway/students/"+studentID, nil)
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("GET", "/v1/gateway/students/"+studentID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API student fail: %w", err)
 	}
@@ -137,7 +141,8 @@ func (g *userGatewayImpl) GetUserInfo(ctx context.Context, userID string) (*gw_r
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/gateway/users/"+userID, nil)
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("GET", "/v1/gateway/users/"+userID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API user fail: %w", err)
 	}
@@ -168,7 +173,8 @@ func (g *userGatewayImpl) GetTeachersByUser(ctx context.Context, userID string) 
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/gateway/teachers/get-by-user/"+userID, nil)
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("GET", "/v1/gateway/teachers/get-by-user/"+userID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API get teacher by user fail: %w", err)
 	}
@@ -199,7 +205,8 @@ func (g *userGatewayImpl) GetTeacherByUserAndOrganization(ctx context.Context, u
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/gateway/teachers/organization/"+organizationID+"/user/"+userID, nil)
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("GET", "/v1/gateway/teachers/organization/"+organizationID+"/user/"+userID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API get teacher by user fail: %w", err)
 	}
@@ -229,7 +236,8 @@ func (g *userGatewayImpl) GetUserByTeacher(ctx context.Context, teacherID string
 		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
 	}
 
-	resp, err := client.Call("GET", "/v1/gateway/users/teacher/"+teacherID, nil)
+	headers := helper.GetHeaders(ctx)
+	resp, err := client.Call("GET", "/v1/gateway/users/teacher/"+teacherID, nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API get teacher by user fail: %w", err)
 	}
