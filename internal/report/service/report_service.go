@@ -244,6 +244,13 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 		return errors.New("report not found, need to create report from teacher")
 	}
 
+	// get editor by teacher id
+	editor, _ := s.userGateway.GetUserByTeacher(ctx, req.TeacherID)
+
+	if editor != nil {
+		report.EditorID = editor.ID
+	}
+
 	// create or update report
 	err := s.repo.CreateOrUpdate(ctx, report)
 	if err != nil {

@@ -15,6 +15,7 @@ type UploadReport4AWebRequest struct {
 	TopicID    string                 `json:"topic_id" binding:"required"`
 	TermID     string                 `json:"term_id" binding:"required"`
 	Language   string                 `json:"language" binding:"required"`
+	TeacherID  string                 `json:"teacher_id" binding:"required"`
 	Status     string                 `json:"status" binding:"required"`
 	Note       map[string]interface{} `json:"note,omitempty"`
 	ReportData map[string]interface{} `json:"report_data" binding:"required"`
