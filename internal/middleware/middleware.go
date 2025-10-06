@@ -3,7 +3,9 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"report-service/helper"
 	"report-service/pkg/constants"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +15,13 @@ import (
 func Secured() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorizationHeader := c.GetHeader("Authorization")
+
+		// app language header
+		appLanguage := helper.ParseAppLanguage(c.GetHeader("X-App-Language"), 1)
+		c.Writer.Header().Set("X-App-Language", strconv.Itoa(int(appLanguage)))
+		c.Set(constants.AppLanguage.String(), appLanguage)
+		ctx := context.WithValue(c.Request.Context(), constants.AppLanguage, appLanguage)
+		c.Request = c.Request.WithContext(ctx)
 
 		if len(authorizationHeader) == 0 {
 			c.AbortWithStatus(http.StatusForbidden)
@@ -55,7 +64,7 @@ func Secured() gin.HandlerFunc {
 
 		// Token
 		c.Set(constants.Token.String(), tokenString)
-		ctx := context.WithValue(c.Request.Context(), constants.Token, tokenString)
+		ctx = context.WithValue(c.Request.Context(), constants.Token, tokenString)
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()

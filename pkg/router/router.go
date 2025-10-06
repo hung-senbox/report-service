@@ -17,13 +17,15 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 
 	// gateway
 	userGateway := gateway.NewUserGateway("go-main-service", consulClient)
+	termGateway := gateway.NewTermGateway("term-service", consulClient)
+	mediaGateway := gateway.NewMediaGateway("media-service", consulClient)
 
 	// Setup dependency injection
 	reportRepo := repository.NewReportRepository(reportCollection)
 	historyRepo := repository.NewReportHistoryRepository(reportHistoryCollection)
 
 	// reoport
-	reportService := service.NewReportService(userGateway, reportRepo, historyRepo)
+	reportService := service.NewReportService(userGateway, termGateway, mediaGateway, reportRepo, historyRepo)
 	reportHandler := handler.NewReportHandler(reportService)
 
 	// report history

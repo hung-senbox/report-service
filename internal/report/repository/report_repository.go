@@ -19,6 +19,7 @@ type ReportRepository interface {
 	CreateOrUpdate(ctx context.Context, report *model.Report) error
 	GetByStudentTopicTermAndLanguage(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error)
 	GetByStudentTopicTermLanguageAndEditor(ctx context.Context, studentID, topicID, termID, language, editorID string) (*model.Report, error)
+	GetAllByEditorID(ctx context.Context, editorID string) ([]*model.Report, error)
 }
 
 type reportRepository struct {
@@ -158,4 +159,22 @@ func (r *reportRepository) GetByStudentTopicTermLanguageAndEditor(ctx context.Co
 		return nil, err
 	}
 	return &report, nil
+}
+
+func (r *reportRepository) GetAllByEditorID(ctx context.Context, editorID string) ([]*model.Report, error) {
+	filter := bson.M{
+		"editor_id": editorID,
+	}
+
+	cur, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var reports []*model.Report
+	if err = cur.All(ctx, &reports); err != nil {
+		return nil, err
+	}
+	return reports, nil
 }

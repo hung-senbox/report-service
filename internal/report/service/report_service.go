@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"report-service/internal/gateway"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
@@ -12,6 +13,7 @@ import (
 	"report-service/pkg/constants"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -26,20 +28,26 @@ type ReportService interface {
 }
 
 type reportService struct {
-	userGateway gateway.UserGateway
-	repo        repository.ReportRepository
-	historyRepo repository.ReportHistoryRepository
+	userGateway  gateway.UserGateway
+	termGateway  gateway.TermGateway
+	mediaGateway gateway.MediaGateway
+	repo         repository.ReportRepository
+	historyRepo  repository.ReportHistoryRepository
 }
 
 func NewReportService(
 	userGateway gateway.UserGateway,
+	termGateway gateway.TermGateway,
+	mediaGateway gateway.MediaGateway,
 	repo repository.ReportRepository,
 	historyRepo repository.ReportHistoryRepository,
 ) ReportService {
 	return &reportService{
-		userGateway: userGateway,
-		repo:        repo,
-		historyRepo: historyRepo,
+		userGateway:  userGateway,
+		termGateway:  termGateway,
+		mediaGateway: mediaGateway,
+		repo:         repo,
+		historyRepo:  historyRepo,
 	}
 }
 
@@ -155,4 +163,51 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 	res := mapper.MapReportToResDTO(report)
 
 	return res, nil
+}
+
+func (s *reportService) GetTeacherReportTasks(ctx context.Context, teacherID string) ([]response.GetTeacherReportTasksResponse, error) {
+	// Lấy thông tin editor từ teacherID
+	editor, err := s.userGateway.GetUserByTeacher(ctx, teacherID)
+	if err != nil {
+		return nil, fmt.Errorf("get teacher failed: %w", err)
+	}
+
+	// Lấy tất cả reports do editor này phụ trách
+	reports, err := s.repo.GetAllByEditorID(ctx, editor.ID)
+	if err != nil {
+		return nil, fmt.Errorf("get reports failed: %w", err)
+	}
+
+	var results []response.GetTeacherReportTasksResponse
+
+	for _, r := range reports {
+		// Bỏ qua nếu main status không phù hợp
+		if r.Status != "Teacher" && r.Status != "Empty" {
+			continue
+		}
+
+		// Duyệt qua các field trong report_data để xem phần nào thuộc "Teacher" hoặc "Empty"
+		if reportData, ok := r.ReportData["report_data"].(bson.M); ok {
+			for key, val := range reportData {
+				if section, ok := val.(bson.M); ok {
+					status, _ := section["status"].(string)
+					term, _ := s.termGateway.GetTermByID(ctx, r.TermID)
+					topic, _ := s.mediaGateway.GetTopicByID(ctx, r.TopicID)
+					student, _ := s.userGateway.GetStudentInfo(ctx, r.StudentID)
+					if status == "Teacher" || status == "Empty" {
+						results = append(results, response.GetTeacherReportTasksResponse{
+							Term:        term.Title,
+							Topic:       topic.Title,
+							StudentName: student.Name,
+							Deadline:    "123",
+							Task:        constants.TeacherReportTask(key),
+							Status:      status,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	return results, nil
 }

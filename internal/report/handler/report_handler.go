@@ -83,3 +83,5 @@ func (h *ReportHandler) GetReport4Web(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", report)
 }
+
+// func (h )
