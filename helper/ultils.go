@@ -24,3 +24,10 @@ func GetHeaders(ctx context.Context) map[string]string {
 
 	return headers
 }
+
+func GetUserID(ctx context.Context) string {
+	if userID, ok := ctx.Value(constants.UserID).(string); ok {
+		return userID
+	}
+	return ""
+}

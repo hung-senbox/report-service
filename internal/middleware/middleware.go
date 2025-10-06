@@ -19,9 +19,11 @@ func Secured() gin.HandlerFunc {
 		// app language header
 		appLanguage := helper.ParseAppLanguage(c.GetHeader("X-App-Language"), 1)
 		c.Writer.Header().Set("X-App-Language", strconv.Itoa(int(appLanguage)))
+
+		// context gốc
+		ctx := c.Request.Context()
+		ctx = context.WithValue(ctx, constants.AppLanguage, appLanguage)
 		c.Set(constants.AppLanguage.String(), appLanguage)
-		ctx := context.WithValue(c.Request.Context(), constants.AppLanguage, appLanguage)
-		c.Request = c.Request.WithContext(ctx)
 
 		if len(authorizationHeader) == 0 {
 			c.AbortWithStatus(http.StatusForbidden)
@@ -34,37 +36,28 @@ func Secured() gin.HandlerFunc {
 		}
 
 		tokenString := strings.Split(authorizationHeader, " ")[1]
-
 		token, _, _ := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			// --- UserID ---
 			if userId, ok := claims[constants.UserID.String()].(string); ok {
-				// gin context → key phải là string
 				c.Set(constants.UserID.String(), userId)
-				// request context → key là ContextKey
-				ctx := context.WithValue(c.Request.Context(), constants.UserID, userId)
-				c.Request = c.Request.WithContext(ctx)
+				ctx = context.WithValue(ctx, constants.UserID, userId)
 			}
-
-			// --- UserName ---
 			if userName, ok := claims[constants.UserName.String()].(string); ok {
 				c.Set(constants.UserName.String(), userName)
-				ctx := context.WithValue(c.Request.Context(), constants.UserName, userName)
-				c.Request = c.Request.WithContext(ctx)
+				ctx = context.WithValue(ctx, constants.UserName, userName)
 			}
-
-			// --- Roles ---
 			if userRoles, ok := claims[constants.UserRoles.String()].(string); ok {
 				c.Set(constants.UserRoles.String(), userRoles)
-				ctx := context.WithValue(c.Request.Context(), constants.UserRoles, userRoles)
-				c.Request = c.Request.WithContext(ctx)
+				ctx = context.WithValue(ctx, constants.UserRoles, userRoles)
 			}
 		}
 
 		// Token
 		c.Set(constants.Token.String(), tokenString)
-		ctx = context.WithValue(c.Request.Context(), constants.Token, tokenString)
+		ctx = context.WithValue(ctx, constants.Token, tokenString)
+
+		// Gán lại context duy nhất cho request
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()

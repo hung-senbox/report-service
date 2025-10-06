@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"report-service/helper"
 	"report-service/internal/gateway"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
@@ -110,7 +111,8 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 	}
 
 	// get editor_id from context (from middleware)
-	if editorID, ok := ctx.Value(constants.UserID).(string); ok {
+	editorID := helper.GetUserID(ctx)
+	if editorID != "" {
 		report.EditorID = editorID
 	}
 
@@ -183,32 +185,43 @@ func (s *reportService) GetTeacherReportTasks(ctx context.Context, teacherID str
 	var results []response.GetTeacherReportTasksResponse
 
 	for _, r := range reports {
-		// Bỏ qua nếu main status không phù hợp
-		if r.Status != "Teacher" && r.Status != "Empty" {
-			continue
-		}
 
-		// Duyệt qua các field trong report_data để xem phần nào thuộc "Teacher" hoặc "Empty"
-		if reportData, ok := r.ReportData["report_data"].(bson.M); ok {
+		if r.ReportData != nil {
+			reportData := toBsonM(r.ReportData)
 			for key, val := range reportData {
-				if section, ok := val.(bson.M); ok {
-					status, _ := section["status"].(string)
+				section := toBsonM(val)
+				status, _ := section["status"].(string)
+
+				if status == "teacher" || status == "empty" {
+					termTitle := ""
+					topicTitle := ""
+					stdName := ""
 					term, _ := s.termGateway.GetTermByID(ctx, r.TermID)
 					topic, _ := s.mediaGateway.GetTopicByID(ctx, r.TopicID)
 					student, _ := s.userGateway.GetStudentInfo(ctx, r.StudentID)
-					if status == "Teacher" || status == "Empty" {
-						results = append(results, response.GetTeacherReportTasksResponse{
-							Term:        term.Title,
-							Topic:       topic.Title,
-							StudentName: student.Name,
-							Deadline:    "empty",
-							Task:        constants.TeacherReportTask(key),
-							Status:      status,
-						})
+
+					if term != nil {
+						termTitle = term.Title
 					}
+					if topic != nil {
+						topicTitle = topic.Title
+					}
+					if student != nil {
+						stdName = student.Name
+					}
+
+					results = append(results, response.GetTeacherReportTasksResponse{
+						Term:        termTitle,
+						Topic:       topicTitle,
+						StudentName: stdName,
+						Deadline:    "empty",
+						Task:        constants.TeacherReportTask(key),
+						Status:      status,
+					})
 				}
 			}
 		}
+
 	}
 
 	return results, nil
@@ -251,4 +264,14 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 	}
 
 	return nil
+}
+
+func toBsonM(v interface{}) bson.M {
+	if m, ok := v.(bson.M); ok {
+		return m
+	}
+	if m, ok := v.(map[string]interface{}); ok {
+		return bson.M(m)
+	}
+	return bson.M{}
 }
