@@ -74,7 +74,7 @@ func (h *ReportHandler) GetReport4Web(c *gin.Context) {
 	report, err := h.service.GetReport4Web(c.Request.Context(), &req)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			helper.SendSuccess(c, http.StatusNotFound, "Report not found", nil)
+			helper.SendSuccess(c, http.StatusOK, "Report not found", nil)
 			return
 		}
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
