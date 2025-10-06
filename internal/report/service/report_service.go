@@ -25,6 +25,7 @@ type ReportService interface {
 	UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error
 	GetReport4App(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
 	GetReport4Web(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
+	GetTeacherReportTasks(ctx context.Context, teacherID string) ([]response.GetTeacherReportTasksResponse, error)
 }
 
 type reportService struct {
@@ -199,7 +200,7 @@ func (s *reportService) GetTeacherReportTasks(ctx context.Context, teacherID str
 							Term:        term.Title,
 							Topic:       topic.Title,
 							StudentName: student.Name,
-							Deadline:    "123",
+							Deadline:    "empty",
 							Task:        constants.TeacherReportTask(key),
 							Status:      status,
 						})
