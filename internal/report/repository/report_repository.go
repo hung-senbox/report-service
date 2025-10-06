@@ -100,11 +100,6 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 
 	update := bson.M{
 		"$set": bson.M{
-			"student_id":  report.StudentID,
-			"editor_id":   report.EditorID,
-			"topic_id":    report.TopicID,
-			"term_id":     report.TermID,
-			"language":    report.Language,
 			"status":      report.Status,
 			"note":        report.Note,
 			"report_data": report.ReportData,

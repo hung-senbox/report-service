@@ -23,6 +23,7 @@ type ReportService interface {
 	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]response.ReportResponse, error)
 	UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error
+	UploadReport4Web(ctx context.Context, req *request.UploadReport4AWebRequest) error
 	GetReport4App(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
 	GetReport4Web(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
 	GetTeacherReportTasks(ctx context.Context, teacherID string) ([]response.GetTeacherReportTasksResponse, error)
@@ -211,4 +212,43 @@ func (s *reportService) GetTeacherReportTasks(ctx context.Context, teacherID str
 	}
 
 	return results, nil
+}
+
+func (s *reportService) UploadReport4Web(ctx context.Context, req *request.UploadReport4AWebRequest) error {
+	report := &model.Report{
+		StudentID:  req.StudentID,
+		TopicID:    req.TopicID,
+		TermID:     req.TermID,
+		Language:   req.Language,
+		Status:     req.Status,
+		Note:       req.Note,
+		ReportData: req.ReportData,
+	}
+
+	// check report da duoc tao tu app chua ?
+	reportExist, _ := s.repo.GetByStudentTopicTermAndLanguage(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
+	if reportExist != nil {
+		return errors.New("report not found, need to create report from teacher")
+	}
+
+	// create or update report
+	err := s.repo.CreateOrUpdate(ctx, report)
+	if err != nil {
+		return err
+	}
+
+	// save report history
+	history := &model.ReportHistory{
+		ID:        primitive.NewObjectID(),
+		ReportID:  report.ID,
+		EditorID:  report.EditorID,
+		Report:    report,
+		Timestamp: time.Now().Unix(),
+	}
+
+	if err := s.historyRepo.Create(ctx, history); err != nil {
+		return err
+	}
+
+	return nil
 }

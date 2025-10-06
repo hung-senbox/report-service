@@ -100,3 +100,18 @@ func (h *ReportHandler) GetTeacherReportTasks(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Report tasks retrieved successfully", reports)
 }
+
+func (h *ReportHandler) UploadReport4Web(c *gin.Context) {
+	var req request.UploadReport4AWebRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
+		return
+	}
+
+	if err := h.service.UploadReport4Web(c.Request.Context(), &req); err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report uploaded successfully", nil)
+}
