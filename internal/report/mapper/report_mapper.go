@@ -1,12 +1,13 @@
 package mapper
 
 import (
+	gw_response "report-service/internal/gateway/dto/response"
 	"report-service/internal/report/dto/response"
 	"report-service/internal/report/model"
 )
 
-func MapReportToResDTO(report *model.Report) response.ReportResponse {
-	// get editor info
+func MapReportToResDTO(report *model.Report, teacher *gw_response.TeacherResponse) response.ReportResponse {
+
 	return response.ReportResponse{
 		ID:         report.ID.Hex(),
 		StudentID:  report.StudentID,
@@ -17,6 +18,7 @@ func MapReportToResDTO(report *model.Report) response.ReportResponse {
 		Note:       report.Note,
 		ReportData: report.ReportData,
 		CreatedAt:  report.CreatedAt,
+		Editor:     *teacher,
 	}
 }
 
@@ -24,7 +26,7 @@ func MapReportToResDTO(report *model.Report) response.ReportResponse {
 func MapReportListToResDTO(reports []*model.Report) []response.ReportResponse {
 	result := make([]response.ReportResponse, 0, len(reports))
 	for _, r := range reports {
-		result = append(result, MapReportToResDTO(r))
+		result = append(result, MapReportToResDTO(r, nil))
 	}
 	return result
 }

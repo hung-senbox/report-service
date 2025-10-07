@@ -147,10 +147,19 @@ func (s *reportService) GetReport4App(ctx context.Context, req *request.GetRepor
 	if report == nil {
 		return response.ReportResponse{}, errors.New("report not found")
 	}
-	return mapper.MapReportToResDTO(report), nil
+	return mapper.MapReportToResDTO(report, nil), nil
 }
 
 func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error) {
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return response.ReportResponse{}, errors.New("get current user failed")
+	}
+
+	if currentUser.IsSuperAdmin {
+		return response.ReportResponse{}, errors.New("super admin can't get report")
+	}
+
 	// get edtior by teacher id
 	editor, err := s.userGateway.GetUserByTeacher(ctx, req.TeacherID)
 	if err != nil {
@@ -165,7 +174,16 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 		return response.ReportResponse{}, errors.New("report not found")
 	}
 
-	res := mapper.MapReportToResDTO(report)
+	// get student info
+	student, _ := s.userGateway.GetStudentInfo(ctx, report.StudentID)
+	if student == nil {
+		return response.ReportResponse{}, errors.New("student not found")
+	}
+
+	// get teacher
+	teacher, _ := s.userGateway.GetTeacherInfo(ctx, report.EditorID, student.OrganizationID)
+
+	res := mapper.MapReportToResDTO(report, teacher)
 
 	return res, nil
 }
