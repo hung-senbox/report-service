@@ -25,8 +25,8 @@ type ReportService interface {
 	GetAll(ctx context.Context) ([]response.ReportResponse, error)
 	UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error
 	UploadReport4Web(ctx context.Context, req *request.UploadReport4AWebRequest) error
-	GetReport4App(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
-	GetReport4Web(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error)
+	GetReport4App(ctx context.Context, req *request.GetReportRequest4App) (response.ReportResponse, error)
+	GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error)
 	GetTeacherReportTasks(ctx context.Context) ([]response.GetTeacherReportTasksResponse, error)
 }
 
@@ -138,7 +138,7 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 	return nil
 }
 
-func (s *reportService) GetReport4App(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
+func (s *reportService) GetReport4App(ctx context.Context, req *request.GetReportRequest4App) (response.ReportResponse, error) {
 	report, err := s.repo.GetByStudentTopicTermAndLanguage(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
 	if err != nil {
 		return response.ReportResponse{}, err
@@ -149,7 +149,7 @@ func (s *reportService) GetReport4App(ctx context.Context, req *request.GetRepor
 	return mapper.MapReportToResDTO(report), nil
 }
 
-func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetReportRequest) (response.ReportResponse, error) {
+func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error) {
 	// get edtior by teacher id
 	editor, err := s.userGateway.GetUserByTeacher(ctx, req.TeacherID)
 	if err != nil {

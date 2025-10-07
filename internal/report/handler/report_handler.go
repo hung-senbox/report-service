@@ -45,7 +45,7 @@ func (h *ReportHandler) GetAllReports(c *gin.Context) {
 }
 
 func (h *ReportHandler) GetReport4App(c *gin.Context) {
-	var req request.GetReportRequest
+	var req request.GetReportRequest4App
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
@@ -65,7 +65,7 @@ func (h *ReportHandler) GetReport4App(c *gin.Context) {
 }
 
 func (h *ReportHandler) GetReport4Web(c *gin.Context) {
-	var req request.GetReportRequest
+	var req request.GetReportRequest4Web
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
