@@ -100,6 +100,7 @@ func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, 
 }
 
 func (s *reportService) UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error {
+
 	report := &model.Report{
 		StudentID:  req.StudentID,
 		TopicID:    req.TopicID,
@@ -117,7 +118,7 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 	}
 
 	// create or update report
-	err := s.repo.CreateOrUpdate(ctx, report)
+	err := s.repo.CreateOrUpdate4App(ctx, report)
 	if err != nil {
 		return err
 	}
@@ -247,7 +248,7 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 	}
 
 	// create or update report
-	err := s.repo.CreateOrUpdate(ctx, report)
+	err := s.repo.CreateOrUpdate4Web(ctx, report)
 	if err != nil {
 		return err
 	}

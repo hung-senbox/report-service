@@ -2,7 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"report-service/internal/report/model"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +23,8 @@ type ReportRepository interface {
 	GetByStudentTopicTermAndLanguage(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error)
 	GetByStudentTopicTermLanguageAndEditor(ctx context.Context, studentID, topicID, termID, language, editorID string) (*model.Report, error)
 	GetAllByEditorID(ctx context.Context, editorID string) ([]*model.Report, error)
+	CreateOrUpdate4App(ctx context.Context, report *model.Report) error
+	CreateOrUpdate4Web(ctx context.Context, report *model.Report) error
 }
 
 type reportRepository struct {
@@ -177,4 +182,109 @@ func (r *reportRepository) GetAllByEditorID(ctx context.Context, editorID string
 		return nil, err
 	}
 	return reports, nil
+}
+
+func (r *reportRepository) CreateOrUpdate4App(ctx context.Context, report *model.Report) error {
+	filter := bson.M{
+		"student_id": report.StudentID,
+		"topic_id":   report.TopicID,
+		"term_id":    report.TermID,
+		"language":   report.Language,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":     report.Status,
+			"editor_id":  report.EditorID,
+			"updated_at": time.Now(),
+		},
+	}
+
+	// merge report_data
+	for section, data := range report.ReportData {
+		if section == "goal" || section == "title" || section == "sub_title" {
+			continue
+		}
+		subData, ok := data.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		for k, v := range subData {
+			if strings.HasPrefix(k, "manager_") {
+				continue
+			}
+			update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
+		}
+	}
+
+	// merge note
+	for k, v := range report.Note {
+		if strings.HasPrefix(k, "manager_") {
+			continue
+		}
+		update["$set"].(bson.M)[fmt.Sprintf("note.%s", k)] = v
+	}
+
+	update["$setOnInsert"] = bson.M{
+		"created_at": time.Now(),
+	}
+
+	opts := options.Update().SetUpsert(true)
+	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("create or update report failed: %w", err)
+	}
+
+	return nil
+}
+
+func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model.Report) error {
+	filter := bson.M{
+		"student_id": report.StudentID,
+		"topic_id":   report.TopicID,
+		"term_id":    report.TermID,
+		"language":   report.Language,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":     report.Status,
+			"editor_id":  report.EditorID,
+			"updated_at": time.Now(),
+		},
+	}
+
+	// --- merge report_data: chỉ field manager_ và status ---
+	for section, data := range report.ReportData {
+		subData, ok := data.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		for k, v := range subData {
+			// Cho phép update nếu là manager_* hoặc status
+			if strings.HasPrefix(k, "manager_") || k == "status" {
+				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
+			}
+		}
+	}
+
+	// --- merge note: chỉ field manager_* và status ---
+	for k, v := range report.Note {
+		if strings.HasPrefix(k, "manager_") || k == "status" {
+			update["$set"].(bson.M)[fmt.Sprintf("note.%s", k)] = v
+		}
+	}
+
+	opts := options.Update().SetUpsert(false)
+	res, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("update report (web) failed: %w", err)
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("report not found")
+	}
+
+	return nil
 }
