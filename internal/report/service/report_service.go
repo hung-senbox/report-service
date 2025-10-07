@@ -101,6 +101,19 @@ func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, 
 
 func (s *reportService) UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error {
 
+	// get student info
+	student, _ := s.userGateway.GetStudentInfo(ctx, req.StudentID)
+	if student == nil {
+		return errors.New("student not found")
+	}
+
+	// get teacher by usser id and organization if of student
+	editorID := helper.GetUserID(ctx)
+	teacher, _ := s.userGateway.GetTeacherInfo(ctx, editorID, student.OrganizationID)
+	if teacher == nil {
+		return errors.New("teacher not found")
+	}
+
 	report := &model.Report{
 		StudentID:  req.StudentID,
 		TopicID:    req.TopicID,
@@ -111,8 +124,6 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 		ReportData: req.ReportData,
 	}
 
-	// get editor_id from context (from middleware)
-	editorID := helper.GetUserID(ctx)
 	if editorID != "" {
 		report.EditorID = editorID
 	}
