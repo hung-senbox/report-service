@@ -250,7 +250,6 @@ func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model
 	update := bson.M{
 		"$set": bson.M{
 			"status":     report.Status,
-			"editor_id":  report.EditorID,
 			"updated_at": time.Now(),
 		},
 	}
