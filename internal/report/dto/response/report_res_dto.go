@@ -10,7 +10,7 @@ type ReportResponse struct {
 	StudentID  string                      `json:"student_id"`
 	TopicID    string                      `json:"topic_id"`
 	TermID     string                      `json:"term_id"`
-	Editor     gw_response.TeacherResponse `json:"editor"`
+	Editor     gw_response.TeacherResponse `json:"editor,omitempty"`
 	Language   string                      `json:"language"`
 	Status     string                      `json:"status"`
 	Note       map[string]interface{}      `json:"note,omitempty"`
