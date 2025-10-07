@@ -8,6 +8,10 @@ import (
 
 func MapReportToResDTO(report *model.Report, teacher *gw_response.TeacherResponse) response.ReportResponse {
 
+	var teacherEditor gw_response.TeacherResponse
+	if teacher != nil {
+		teacherEditor = *teacher
+	}
 	return response.ReportResponse{
 		ID:         report.ID.Hex(),
 		StudentID:  report.StudentID,
@@ -18,7 +22,7 @@ func MapReportToResDTO(report *model.Report, teacher *gw_response.TeacherRespons
 		Note:       report.Note,
 		ReportData: report.ReportData,
 		CreatedAt:  report.CreatedAt,
-		Editor:     *teacher,
+		Editor:     teacherEditor,
 	}
 }
 
