@@ -141,7 +141,7 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 		EditorID:   report.EditorID,
 		EditorRole: string(constants.ReportHistoryRoleTeacher),
 		Report:     report,
-		Timestamp:  time.Now().Unix(),
+		Timestamp:  time.Now(),
 	}
 
 	if err := s.historyRepo.Create(ctx, history); err != nil {
@@ -283,7 +283,7 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 		EditorID:   helper.GetUserID(ctx),
 		EditorRole: string(constants.ReportHistoryRoleManager),
 		Report:     report,
-		Timestamp:  time.Now().Unix(),
+		Timestamp:  time.Now(),
 	}
 
 	if err := s.historyRepo.Create(ctx, history); err != nil {

@@ -6,7 +6,7 @@ import (
 )
 
 // MapReportHistoryToResDTO maps a single ReportHistory to ReportHistoryResponse
-func MapReportHistoryToResDTO(history *model.ReportHistory) response.ReportHistoryResponse {
+func MapReportHistoryToRes4App(history *model.ReportHistory) response.ReportHistoryResponse {
 	var reportRes response.ReportResponse
 	if history.Report != nil {
 		reportRes = MapReportToResDTO(history.Report, nil)
@@ -22,10 +22,10 @@ func MapReportHistoryToResDTO(history *model.ReportHistory) response.ReportHisto
 }
 
 // MapReportHistoryListToResDTO maps slice of ReportHistory to slice of ReportHistoryResponse
-func MapReportHistoryListToResDTO(histories []*model.ReportHistory) []response.ReportHistoryResponse {
+func MapReportHistoryListToRes4App(histories []*model.ReportHistory) []response.ReportHistoryResponse {
 	result := make([]response.ReportHistoryResponse, 0, len(histories))
 	for _, h := range histories {
-		result = append(result, MapReportHistoryToResDTO(h))
+		result = append(result, MapReportHistoryToRes4App(h))
 	}
 	return result
 }

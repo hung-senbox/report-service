@@ -16,12 +16,11 @@ func NewReportHistoryHandler(s service.ReportHistoryService) *ReportHistoryHandl
 	return &ReportHistoryHandler{service: s}
 }
 
-func (h *ReportHistoryHandler) GetAllReportHistory(c *gin.Context) {
-	reportHis, err := h.service.GetAll(c.Request.Context())
+func (h *ReportHistoryHandler) GetByEditor4App(c *gin.Context) {
+	histories, err := h.service.GetByEditor4App(c.Request.Context())
 	if err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
 		return
 	}
-
-	helper.SendSuccess(c, http.StatusOK, "Report history retrieved successfully", reportHis)
+	helper.SendSuccess(c, http.StatusOK, "History retrieved successfully", histories)
 }

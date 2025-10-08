@@ -1,6 +1,10 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type ReportHistory struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
@@ -8,5 +12,5 @@ type ReportHistory struct {
 	EditorID   string             `bson:"editor_id"`
 	EditorRole string             `bson:"editor_role"`
 	Report     *Report            `bson:"report"`
-	Timestamp  int64              `bson:"timestamp"`
+	Timestamp  time.Time          `bson:"timestamp"`
 }

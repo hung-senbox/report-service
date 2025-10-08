@@ -18,7 +18,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 			reportsAdmin.POST("/get-report", h.GetReport4Web)
 
 			// report history
-			reportsAdmin.GET("/history", rh.GetAllReportHistory)
+			reportsAdmin.GET("/histories", rh.GetByEditor4App)
 		}
 	}
 
@@ -31,6 +31,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 			reportsUser.POST("", h.UploadReport4App)
 			reportsUser.POST("/get-report", h.GetReport4App)
 			reportsUser.GET("/tasks", h.GetTeacherReportTasks)
+			reportsUser.GET("/histories", rh.GetByEditor4App)
 		}
 	}
 }
