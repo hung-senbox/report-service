@@ -111,7 +111,6 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 			"term_id":     report.TermID,
 			"language":    report.Language,
 			"status":      report.Status,
-			"note_data":   report.NoteData,
 			"report_data": report.ReportData,
 			"updated_at":  report.UpdatedAt,
 		},
@@ -218,14 +217,6 @@ func (r *reportRepository) CreateOrUpdate4App(ctx context.Context, report *model
 		}
 	}
 
-	// merge note
-	for k, v := range report.NoteData {
-		if strings.HasPrefix(k, "manager_") {
-			continue
-		}
-		update["$set"].(bson.M)[fmt.Sprintf("note.%s", k)] = v
-	}
-
 	update["$setOnInsert"] = bson.M{
 		"created_at": time.Now(),
 	}
@@ -266,13 +257,6 @@ func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model
 			if strings.HasPrefix(k, "manager_") || k == "status" {
 				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
 			}
-		}
-	}
-
-	// --- merge note: chỉ field manager_* và status ---
-	for k, v := range report.NoteData {
-		if strings.HasPrefix(k, "manager_") || k == "status" {
-			update["$set"].(bson.M)[fmt.Sprintf("note.%s", k)] = v
 		}
 	}
 
