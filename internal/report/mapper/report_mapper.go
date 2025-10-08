@@ -19,7 +19,7 @@ func MapReportToResDTO(report *model.Report, teacher *gw_response.TeacherRespons
 		TermID:     report.TermID,
 		Language:   report.Language,
 		Status:     report.Status,
-		Note:       report.Note,
+		NoteData:   report.NoteData,
 		ReportData: report.ReportData,
 		CreatedAt:  report.CreatedAt,
 		Editor:     teacherEditor,
