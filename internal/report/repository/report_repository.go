@@ -111,7 +111,7 @@ func (r *reportRepository) CreateOrUpdate(ctx context.Context, report *model.Rep
 			"term_id":     report.TermID,
 			"language":    report.Language,
 			"status":      report.Status,
-			"note":        report.Note,
+			"note_data":   report.NoteData,
 			"report_data": report.ReportData,
 			"updated_at":  report.UpdatedAt,
 		},
@@ -219,7 +219,7 @@ func (r *reportRepository) CreateOrUpdate4App(ctx context.Context, report *model
 	}
 
 	// merge note
-	for k, v := range report.Note {
+	for k, v := range report.NoteData {
 		if strings.HasPrefix(k, "manager_") {
 			continue
 		}
@@ -270,7 +270,7 @@ func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model
 	}
 
 	// --- merge note: chỉ field manager_* và status ---
-	for k, v := range report.Note {
+	for k, v := range report.NoteData {
 		if strings.HasPrefix(k, "manager_") || k == "status" {
 			update["$set"].(bson.M)[fmt.Sprintf("note.%s", k)] = v
 		}

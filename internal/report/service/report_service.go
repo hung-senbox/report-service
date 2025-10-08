@@ -120,7 +120,7 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 		TermID:     req.TermID,
 		Language:   req.Language,
 		Status:     req.Status,
-		Note:       req.Note,
+		NoteData:   req.NoteData,
 		ReportData: req.ReportData,
 	}
 
@@ -259,7 +259,7 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 		TermID:     req.TermID,
 		Language:   req.Language,
 		Status:     req.Status,
-		Note:       req.Note,
+		NoteData:   req.NoteData,
 		ReportData: req.ReportData,
 	}
 

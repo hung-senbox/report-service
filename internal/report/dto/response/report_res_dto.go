@@ -13,7 +13,7 @@ type ReportResponse struct {
 	Editor     gw_response.TeacherResponse `json:"editor,omitempty"`
 	Language   string                      `json:"language"`
 	Status     string                      `json:"status"`
-	Note       map[string]interface{}      `json:"note,omitempty"`
+	NoteData   map[string]interface{}      `json:"note_data,omitempty"`
 	ReportData map[string]interface{}      `json:"report_data"`
 	CreatedAt  time.Time                   `json:"created_at"`
 }

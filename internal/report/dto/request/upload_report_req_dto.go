@@ -6,7 +6,7 @@ type UploadReport4AppRequest struct {
 	TermID     string                 `json:"term_id" binding:"required"`
 	Language   string                 `json:"language" binding:"required"`
 	Status     string                 `json:"status" binding:"required"`
-	Note       map[string]interface{} `json:"note" binding:"required"`
+	NoteData   map[string]interface{} `json:"note_data" binding:"required"`
 	ReportData map[string]interface{} `json:"report_data" binding:"required"`
 }
 
@@ -16,7 +16,7 @@ type UploadReport4AWebRequest struct {
 	TermID     string                 `json:"term_id" binding:"required"`
 	Language   string                 `json:"language" binding:"required"`
 	Status     string                 `json:"status" binding:"required"`
-	Note       map[string]interface{} `json:"note" binding:"required"`
+	NoteData   map[string]interface{} `json:"note_data" binding:"required"`
 	ReportData map[string]interface{} `json:"report_data" binding:"required"`
 }
 
