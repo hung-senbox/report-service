@@ -136,11 +136,12 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 
 	// save report history
 	history := &model.ReportHistory{
-		ID:        primitive.NewObjectID(),
-		ReportID:  report.ID,
-		EditorID:  report.EditorID,
-		Report:    report,
-		Timestamp: time.Now().Unix(),
+		ID:         primitive.NewObjectID(),
+		ReportID:   report.ID,
+		EditorID:   report.EditorID,
+		EditorRole: string(constants.ReportHistoryRoleTeacher),
+		Report:     report,
+		Timestamp:  time.Now().Unix(),
 	}
 
 	if err := s.historyRepo.Create(ctx, history); err != nil {
@@ -277,11 +278,12 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 
 	// save report history
 	history := &model.ReportHistory{
-		ID:        primitive.NewObjectID(),
-		ReportID:  report.ID,
-		EditorID:  report.EditorID,
-		Report:    report,
-		Timestamp: time.Now().Unix(),
+		ID:         primitive.NewObjectID(),
+		ReportID:   report.ID,
+		EditorID:   helper.GetUserID(ctx),
+		EditorRole: string(constants.ReportHistoryRoleManager),
+		Report:     report,
+		Timestamp:  time.Now().Unix(),
 	}
 
 	if err := s.historyRepo.Create(ctx, history); err != nil {

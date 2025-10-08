@@ -128,3 +128,10 @@ const (
 	TeacherReportTaskIntroduction TeacherReportTask = "introduction"
 	TeacherReportTaskNow          TeacherReportTask = "now"
 )
+
+type ReportHistoryRole string
+
+const (
+	ReportHistoryRoleTeacher ReportHistoryRole = "teacher"
+	ReportHistoryRoleManager ReportHistoryRole = "manager"
+)
