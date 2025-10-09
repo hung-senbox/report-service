@@ -86,26 +86,6 @@ func MapReportToResDTO(
 		report.ReportData["conclusion"] = conclusionData
 	}
 
-	// --- Đảm bảo phần "introduction" có các key manager_* ---
-	if introductionData, ok := report.ReportData["introduction"].(bson.M); ok {
-		if _, ok := introductionData["manager_note"]; !ok {
-			introductionData["manager_note"] = ""
-		}
-		if _, ok := introductionData["manager_comment"]; !ok {
-			introductionData["manager_comment"] = ""
-		}
-		if _, ok := introductionData["manager_updated_at"]; !ok {
-			introductionData["manager_updated_at"] = ""
-		}
-		report.ReportData["introduction"] = introductionData
-	} else {
-		report.ReportData["introduction"] = bson.M{
-			"manager_note":       "",
-			"manager_comment":    "",
-			"manager_updated_at": "",
-		}
-	}
-
 	// --- Đảm bảo phần "note" có các key manager_* ---
 	if noteData, ok := report.ReportData["note"].(bson.M); ok {
 		if _, ok := noteData["manager_note"]; !ok {
