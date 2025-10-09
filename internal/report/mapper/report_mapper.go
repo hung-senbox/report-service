@@ -59,51 +59,65 @@ func MapReportToResDTO(
 	}
 
 	// --- Đảm bảo phần "before" có các key manager_* ---
-	if nowData, ok := report.ReportData["before"].(bson.M); ok {
-		if _, ok := nowData["manager_note"]; !ok {
-			nowData["manager_note"] = ""
+	if beforeData, ok := report.ReportData["before"].(bson.M); ok {
+		if _, ok := beforeData["manager_note"]; !ok {
+			beforeData["manager_note"] = ""
 		}
-		if _, ok := nowData["manager_comment"]; !ok {
-			nowData["manager_comment"] = ""
+		if _, ok := beforeData["manager_comment"]; !ok {
+			beforeData["manager_comment"] = ""
 		}
-		if _, ok := nowData["manager_updated_at"]; !ok {
-			nowData["manager_updated_at"] = ""
+		if _, ok := beforeData["manager_updated_at"]; !ok {
+			beforeData["manager_updated_at"] = ""
 		}
-		report.ReportData["now"] = nowData
+		report.ReportData["before"] = beforeData
 	}
 
 	// --- Đảm bảo phần "conclusion" có các key manager_* ---
-	if nowData, ok := report.ReportData["conclusion"].(bson.M); ok {
-		if _, ok := nowData["manager_note"]; !ok {
-			nowData["manager_note"] = ""
+	if conclusionData, ok := report.ReportData["conclusion"].(bson.M); ok {
+		if _, ok := conclusionData["manager_note"]; !ok {
+			conclusionData["manager_note"] = ""
 		}
-		if _, ok := nowData["manager_comment"]; !ok {
-			nowData["manager_comment"] = ""
+		if _, ok := conclusionData["manager_comment"]; !ok {
+			conclusionData["manager_comment"] = ""
 		}
-		if _, ok := nowData["manager_updated_at"]; !ok {
-			nowData["manager_updated_at"] = ""
+		if _, ok := conclusionData["manager_updated_at"]; !ok {
+			conclusionData["manager_updated_at"] = ""
 		}
-		report.ReportData["now"] = nowData
+		report.ReportData["conclusion"] = conclusionData
 	}
 
 	// --- Đảm bảo phần "introduction" có các key manager_* ---
-	if nowData, ok := report.ReportData["introduction"].(bson.M); ok {
-		if _, ok := nowData["manager_note"]; !ok {
-			nowData["manager_note"] = ""
+	if introductionData, ok := report.ReportData["introduction"].(bson.M); ok {
+		if _, ok := introductionData["manager_note"]; !ok {
+			introductionData["manager_note"] = ""
 		}
-		if _, ok := nowData["manager_comment"]; !ok {
-			nowData["manager_comment"] = ""
+		if _, ok := introductionData["manager_comment"]; !ok {
+			introductionData["manager_comment"] = ""
 		}
-		if _, ok := nowData["manager_updated_at"]; !ok {
-			nowData["manager_updated_at"] = ""
+		if _, ok := introductionData["manager_updated_at"]; !ok {
+			introductionData["manager_updated_at"] = ""
 		}
-		report.ReportData["now"] = nowData
+		report.ReportData["introduction"] = introductionData
 	} else {
 		report.ReportData["introduction"] = bson.M{
 			"manager_note":       "",
 			"manager_comment":    "",
 			"manager_updated_at": "",
 		}
+	}
+
+	// --- Đảm bảo phần "note" có các key manager_* ---
+	if noteData, ok := report.ReportData["note"].(bson.M); ok {
+		if _, ok := noteData["manager_note"]; !ok {
+			noteData["manager_note"] = ""
+		}
+		if _, ok := noteData["manager_comment"]; !ok {
+			noteData["manager_comment"] = ""
+		}
+		if _, ok := noteData["manager_updated_at"]; !ok {
+			noteData["manager_updated_at"] = ""
+		}
+		report.ReportData["note"] = noteData
 	}
 
 	// --- Map editor ---
