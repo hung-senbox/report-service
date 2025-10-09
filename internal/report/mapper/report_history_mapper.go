@@ -9,7 +9,7 @@ import (
 func MapReportHistoryToRes4App(history *model.ReportHistory) response.ReportHistoryResponse {
 	var reportRes response.ReportResponse
 	if history.Report != nil {
-		reportRes = MapReportToResDTO(history.Report, nil, response.ManagerCommentPreviousTerm{}, response.TeacherReportPreviousTerm{})
+		reportRes = MapReportToResDTO(history.Report, nil, response.ManagerCommentPreviousTerm{}, response.TeacherReportPreviousTerm{}, "")
 	}
 
 	return response.ReportHistoryResponse{

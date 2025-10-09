@@ -13,6 +13,7 @@ func MapReportToResDTO(
 	teacher *gw_response.TeacherResponse,
 	managerCmPrevious response.ManagerCommentPreviousTerm,
 	teacherRpPrevious response.TeacherReportPreviousTerm,
+	latestDataTermId string,
 ) response.ReportResponse {
 
 	// --- Đảm bảo report.ReportData không nil ---
@@ -118,6 +119,7 @@ func MapReportToResDTO(
 		Editor:                     teacherEditor,
 		ManagerCommentPreviousTerm: managerCmPrevious,
 		TeacherReportPreviousTerm:  teacherRpPrevious,
+		LatestDataTermID:           latestDataTermId,
 	}
 }
 
@@ -125,7 +127,7 @@ func MapReportToResDTO(
 func MapReportListToResDTO(reports []*model.Report) []response.ReportResponse {
 	result := make([]response.ReportResponse, 0, len(reports))
 	for _, r := range reports {
-		result = append(result, MapReportToResDTO(r, nil, response.ManagerCommentPreviousTerm{}, response.TeacherReportPreviousTerm{}))
+		result = append(result, MapReportToResDTO(r, nil, response.ManagerCommentPreviousTerm{}, response.TeacherReportPreviousTerm{}, ""))
 	}
 	return result
 }

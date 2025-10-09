@@ -196,7 +196,7 @@ func (s *reportService) GetReport4App(ctx context.Context, req *request.GetRepor
 
 	}
 
-	return mapper.MapReportToResDTO(report, nil, managerCommentPreviousTerm, teacherReportPrevioiusTerm), nil
+	return mapper.MapReportToResDTO(report, nil, managerCommentPreviousTerm, teacherReportPrevioiusTerm, ""), nil
 }
 
 func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error) {
@@ -263,7 +263,16 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 
 	}
 
-	res := mapper.MapReportToResDTO(report, teacher, managerCommentPreviousTerm, teacherReportPrevioiusTerm)
+	// get latest data term id
+	uploadReq := request.UploadReport4AWebRequest{
+		StudentID: report.StudentID,
+		TopicID:   report.TopicID,
+		TermID:    report.TermID,
+		Language:  report.Language,
+	}
+	latestTerm, _ := s.getLatestDataTermID(ctx, report.TermID, student.OrganizationID, uploadReq)
+
+	res := mapper.MapReportToResDTO(report, teacher, managerCommentPreviousTerm, teacherReportPrevioiusTerm, latestTerm)
 
 	return res, nil
 }
@@ -370,17 +379,42 @@ func toBsonM(v interface{}) bson.M {
 	return bson.M{}
 }
 
-func (s *reportService) GetLatestDataTermID(ctx context.Context, termID string, organiztionID string) (string, error) {
-	// get list terms previous
-	previousTerms, err := s.termGateway.GetPreviousTerms(ctx, termID, organiztionID)
+func (s *reportService) getLatestDataTermID(
+	ctx context.Context,
+	termID string,
+	organizationID string,
+	uploadReq request.UploadReport4AWebRequest,
+) (string, error) {
+
+	// Lấy danh sách các term trước đó, sắp theo thứ tự gần nhất -> xa nhất
+	previousTerms, err := s.termGateway.GetPreviousTerms(ctx, termID, organizationID)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("get previous terms failed: %w", err)
 	}
 
-	// loop previous terms
+	// Duyệt từng term để tìm term có teacher_report != ""
 	for _, term := range previousTerms {
-		if term != nil {
-			return term.ID, nil
+		report, err := s.repo.GetByStudentTopicTermAndLanguage(ctx,
+			uploadReq.StudentID, uploadReq.TopicID, term.ID, uploadReq.Language)
+		if err != nil {
+			continue // bỏ qua lỗi từng report, không dừng toàn bộ
+		}
+
+		if report == nil || report.ReportData == nil {
+			continue
+		}
+
+		reportData := toBsonM(report.ReportData)
+
+		// danh sách các section có thể chứa teacher_report
+		sections := []string{"before", "now", "note", "conclusion"}
+
+		for _, section := range sections {
+			if data, ok := reportData[section].(bson.M); ok {
+				if teacherReport, ok := data["teacher_report"].(string); ok && teacherReport != "" {
+					return term.ID, nil
+				}
+			}
 		}
 	}
 

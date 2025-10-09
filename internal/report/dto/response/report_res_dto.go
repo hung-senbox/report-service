@@ -17,6 +17,7 @@ type ReportResponse struct {
 	CreatedAt                  time.Time                   `json:"created_at"`
 	ManagerCommentPreviousTerm ManagerCommentPreviousTerm  `json:"manager_comment_previous_term"`
 	TeacherReportPreviousTerm  TeacherReportPreviousTerm   `json:"teacher_report_previous_term"`
+	LatestDataTermID           string                      `json:"latest_data_term_id"`
 }
 
 type ReportEditor struct {
