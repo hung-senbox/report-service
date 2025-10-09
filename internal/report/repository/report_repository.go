@@ -245,7 +245,6 @@ func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model
 		},
 	}
 
-	// --- merge report_data: chỉ field manager_ và status ---
 	for section, data := range report.ReportData {
 		subData, ok := data.(map[string]interface{})
 		if !ok {
@@ -253,11 +252,13 @@ func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model
 		}
 
 		if section == "goal" || section == "title" || section == "sub_title" || section == "introduction" {
-			update["$set"].(bson.M)[fmt.Sprintf("report_data.%s", section)] = subData
+			for k, v := range subData {
+				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
+			}
+			continue
 		}
 
 		for k, v := range subData {
-			// Cho phép update nếu là manager_* hoặc status
 			if strings.HasPrefix(k, "manager_") || k == "status" {
 				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
 			}
