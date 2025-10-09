@@ -194,8 +194,6 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 	// get teacher
 	teacher, _ := s.userGateway.GetTeacherInfo(ctx, report.EditorID, student.OrganizationID)
 
-	// get manager comment previous term
-	//step 1: get previous term
 	var managerCommentPreviousTerm response.ManagerCommentPreviousTerm
 	var teacherReportPrevioiusTerm response.TeacherReportPreviousTerm
 	previousTerm, _ := s.termGateway.GetPreviousTerm(ctx, report.TermID, student.OrganizationID)
@@ -204,7 +202,9 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 		if previousTermReport != nil {
 			managerCommentPreviousTerm.TermTitle = previousTerm.Title
 
-			if nowData, ok := previousTermReport.ReportData["now"].(map[string]interface{}); ok {
+			//fmt.Printf("[DEBUG] type of ReportData[now]: %T\n", previousTermReport.ReportData["now"])
+			//fmt.Printf("[DEBUG] value: %#v\n", previousTermReport.ReportData["now"])
+			if nowData, ok := previousTermReport.ReportData["now"].(primitive.M); ok {
 				if comment, ok := nowData["manager_comment"].(string); ok {
 					managerCommentPreviousTerm.Now = comment
 				}
@@ -213,7 +213,7 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 				}
 			}
 
-			if conclusionData, ok := previousTermReport.ReportData["conclusion"].(map[string]interface{}); ok {
+			if conclusionData, ok := previousTermReport.ReportData["conclusion"].(primitive.M); ok {
 				if comment, ok := conclusionData["manager_comment"].(string); ok {
 					managerCommentPreviousTerm.Conclusion = comment
 				}
