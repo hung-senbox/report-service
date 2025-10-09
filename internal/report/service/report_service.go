@@ -158,7 +158,7 @@ func (s *reportService) GetReport4App(ctx context.Context, req *request.GetRepor
 	if report == nil {
 		return response.ReportResponse{}, errors.New("report not found")
 	}
-	return mapper.MapReportToResDTO(report, nil), nil
+	return mapper.MapReportToResDTO(report, nil, response.ManagerCommentPreviousTerm{}, response.TeacherReportPreviousTerm{}), nil
 }
 
 func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error) {
@@ -194,7 +194,38 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 	// get teacher
 	teacher, _ := s.userGateway.GetTeacherInfo(ctx, report.EditorID, student.OrganizationID)
 
-	res := mapper.MapReportToResDTO(report, teacher)
+	// get manager comment previous term
+	//step 1: get previous term
+	var managerCommentPreviousTerm response.ManagerCommentPreviousTerm
+	var teacherReportPrevioiusTerm response.TeacherReportPreviousTerm
+	previousTerm, _ := s.termGateway.GetPreviousTerm(ctx, report.TermID, student.OrganizationID)
+	if previousTerm != nil {
+		previousTermReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(ctx, report.StudentID, report.TopicID, previousTerm.ID, report.Language, report.EditorID)
+		if previousTermReport != nil {
+			managerCommentPreviousTerm.TermTitle = previousTerm.Title
+
+			if nowData, ok := previousTermReport.ReportData["now"].(map[string]interface{}); ok {
+				if comment, ok := nowData["manager_comment"].(string); ok {
+					managerCommentPreviousTerm.Now = comment
+				}
+				if report, ok := nowData["teacher_report"].(string); ok {
+					teacherReportPrevioiusTerm.Now = report
+				}
+			}
+
+			if conclusionData, ok := previousTermReport.ReportData["conclusion"].(map[string]interface{}); ok {
+				if comment, ok := conclusionData["manager_comment"].(string); ok {
+					managerCommentPreviousTerm.Conclusion = comment
+				}
+				if report, ok := conclusionData["teacher_report"].(string); ok {
+					teacherReportPrevioiusTerm.Conclusion = report
+				}
+			}
+		}
+
+	}
+
+	res := mapper.MapReportToResDTO(report, teacher, managerCommentPreviousTerm, teacherReportPrevioiusTerm)
 
 	return res, nil
 }

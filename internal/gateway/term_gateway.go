@@ -14,6 +14,7 @@ import (
 
 type TermGateway interface {
 	GetTermByID(ctx context.Context, termID string) (*gw_response.TermResponse, error)
+	GetPreviousTerm(ctx context.Context, termID string, organizationID string) (*gw_response.TermResponse, error)
 }
 
 type termGateway struct {
@@ -44,6 +45,41 @@ func (g *termGateway) GetTermByID(ctx context.Context, termID string) (*gw_respo
 	// gọi API với query params
 	headers := helper.GetHeaders(ctx)
 	url := fmt.Sprintf("/api/v1/gateway/terms/%s", termID)
+	resp, err := client.Call("GET", url, nil, headers)
+	if err != nil {
+		return nil, err
+	}
+
+	// parse JSON
+	var gwResp gw_response.APIGateWayResponse[*gw_response.TermResponse]
+	if err := json.Unmarshal(resp, &gwResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response fail: %w", err)
+	}
+
+	// check status
+	if gwResp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("call gateway get term fail: %s", gwResp.Message)
+	}
+
+	return gwResp.Data, nil
+}
+
+func (g *termGateway) GetPreviousTerm(ctx context.Context, termID string, organizationID string) (*gw_response.TermResponse, error) {
+	// lấy token từ context
+	token, ok := ctx.Value(constants.Token).(string)
+	if !ok {
+		return nil, fmt.Errorf("token not found in context")
+	}
+
+	// tạo client
+	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// gọi API với query params
+	headers := helper.GetHeaders(ctx)
+	url := "/api/v1/gateway/terms/" + termID + "/previous?organization_id=" + organizationID
 	resp, err := client.Call("GET", url, nil, headers)
 	if err != nil {
 		return nil, err

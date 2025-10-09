@@ -6,22 +6,24 @@ import (
 	"report-service/internal/report/model"
 )
 
-func MapReportToResDTO(report *model.Report, teacher *gw_response.TeacherResponse) response.ReportResponse {
+func MapReportToResDTO(report *model.Report, teacher *gw_response.TeacherResponse, managerCmPrevious response.ManagerCommentPreviousTerm, teacherRpPrevious response.TeacherReportPreviousTerm) response.ReportResponse {
 
 	var teacherEditor gw_response.TeacherResponse
 	if teacher != nil {
 		teacherEditor = *teacher
 	}
 	return response.ReportResponse{
-		ID:         report.ID.Hex(),
-		StudentID:  report.StudentID,
-		TopicID:    report.TopicID,
-		TermID:     report.TermID,
-		Language:   report.Language,
-		Status:     report.Status,
-		ReportData: report.ReportData,
-		CreatedAt:  report.CreatedAt,
-		Editor:     teacherEditor,
+		ID:                         report.ID.Hex(),
+		StudentID:                  report.StudentID,
+		TopicID:                    report.TopicID,
+		TermID:                     report.TermID,
+		Language:                   report.Language,
+		Status:                     report.Status,
+		ReportData:                 report.ReportData,
+		CreatedAt:                  report.CreatedAt,
+		Editor:                     teacherEditor,
+		ManagerCommentPreviousTerm: managerCmPrevious,
+		TeacherReportPreviousTerm:  teacherRpPrevious,
 	}
 }
 
@@ -29,7 +31,7 @@ func MapReportToResDTO(report *model.Report, teacher *gw_response.TeacherRespons
 func MapReportListToResDTO(reports []*model.Report) []response.ReportResponse {
 	result := make([]response.ReportResponse, 0, len(reports))
 	for _, r := range reports {
-		result = append(result, MapReportToResDTO(r, nil))
+		result = append(result, MapReportToResDTO(r, nil, response.ManagerCommentPreviousTerm{}, response.TeacherReportPreviousTerm{}))
 	}
 	return result
 }
