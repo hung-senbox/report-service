@@ -369,3 +369,20 @@ func toBsonM(v interface{}) bson.M {
 	}
 	return bson.M{}
 }
+
+func (s *reportService) GetLatestDataTermID(ctx context.Context, termID string, organiztionID string) (string, error) {
+	// get list terms previous
+	previousTerms, err := s.termGateway.GetPreviousTerms(ctx, termID, organiztionID)
+	if err != nil {
+		return "", err
+	}
+
+	// loop previous terms
+	for _, term := range previousTerms {
+		if term != nil {
+			return term.ID, nil
+		}
+	}
+
+	return "", nil
+}

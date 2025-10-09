@@ -252,6 +252,10 @@ func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model
 			continue
 		}
 
+		if section == "goal" || section == "title" || section == "sub_title" || section == "introduction" {
+			update["$set"].(bson.M)[fmt.Sprintf("report_data.%s", section)] = subData
+		}
+
 		for k, v := range subData {
 			// Cho phép update nếu là manager_* hoặc status
 			if strings.HasPrefix(k, "manager_") || k == "status" {
