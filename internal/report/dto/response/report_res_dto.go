@@ -27,13 +27,17 @@ type ReportEditor struct {
 }
 
 type ManagerCommentPreviousTerm struct {
-	Now        string `json:"now"`
-	Conclusion string `json:"conclusion"`
-	TermTitle  string `json:"term_title"`
+	Now                 string `json:"now"`
+	NowUpdatedAt        string `json:"now_updated_at"`
+	Conclusion          string `json:"conclusion"`
+	ConclusionUpdatedAt string `json:"conclusion_updated_at"`
+	TermTitle           string `json:"term_title"`
 }
 
 type TeacherReportPreviousTerm struct {
-	Now        string `json:"now"`
-	Conclusion string `json:"conclusion"`
-	TermTitle  string `json:"term_title"`
+	Now                 string `json:"now"`
+	NowUpdatedAt        string `json:"now_updated_at"`
+	Conclusion          string `json:"conclusion"`
+	ConclusionUpdatedAt string `json:"conclusion_updated_at"`
+	TermTitle           string `json:"term_title"`
 }

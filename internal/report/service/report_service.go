@@ -239,15 +239,20 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 		previousTermReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(ctx, report.StudentID, report.TopicID, previousTerm.ID, report.Language, report.EditorID)
 		if previousTermReport != nil {
 			managerCommentPreviousTerm.TermTitle = previousTerm.Title
+			teacherReportPrevioiusTerm.TermTitle = previousTerm.Title
 
-			//fmt.Printf("[DEBUG] type of ReportData[now]: %T\n", previousTermReport.ReportData["now"])
-			//fmt.Printf("[DEBUG] value: %#v\n", previousTermReport.ReportData["now"])
 			if nowData, ok := previousTermReport.ReportData["now"].(primitive.M); ok {
 				if comment, ok := nowData["manager_comment"].(string); ok {
 					managerCommentPreviousTerm.Now = comment
 				}
 				if report, ok := nowData["teacher_report"].(string); ok {
 					teacherReportPrevioiusTerm.Now = report
+				}
+				if managerUpdatedAt, ok := nowData["manager_updated_at"].(string); ok {
+					managerCommentPreviousTerm.NowUpdatedAt = managerUpdatedAt
+				}
+				if updatedAt, ok := nowData["updated_at"].(string); ok {
+					teacherReportPrevioiusTerm.NowUpdatedAt = updatedAt
 				}
 			}
 
@@ -257,6 +262,12 @@ func (s *reportService) GetReport4Web(ctx context.Context, req *request.GetRepor
 				}
 				if report, ok := conclusionData["teacher_report"].(string); ok {
 					teacherReportPrevioiusTerm.Conclusion = report
+				}
+				if managerUpdatedAt, ok := conclusionData["manager_updated_at"].(string); ok {
+					managerCommentPreviousTerm.ConclusionUpdatedAt = managerUpdatedAt
+				}
+				if updatedAt, ok := conclusionData["updated_at"].(string); ok {
+					teacherReportPrevioiusTerm.ConclusionUpdatedAt = updatedAt
 				}
 			}
 		}
