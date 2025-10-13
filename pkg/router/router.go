@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, reportHistoryCollection *mongo.Collection) *gin.Engine {
+func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, reportHistoryCollection *mongo.Collection, reportPlanTemplateCollection *mongo.Collection) *gin.Engine {
 	r := gin.Default()
 
 	// gateway
@@ -23,6 +23,7 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 	// Setup dependency injection
 	reportRepo := repository.NewReportRepository(reportCollection)
 	historyRepo := repository.NewReportHistoryRepository(reportHistoryCollection)
+	reportPlanTemplateRepo := repository.NewReportPlanTemplateRepository(reportPlanTemplateCollection)
 
 	// reoport
 	reportService := service.NewReportService(userGateway, termGateway, mediaGateway, reportRepo, historyRepo)
@@ -32,7 +33,11 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 	reportHistoryService := service.NewReportHistoryService(historyRepo)
 	reportHistoryHandler := handler.NewReportHistoryHandler(reportHistoryService)
 
+	// report plan template
+	reportPlanTemplateService := service.NewReportPlanTemplateService(reportPlanTemplateRepo, userGateway)
+	reportPlanTemplateHandler := handler.NewReportPlanTemplateHandler(reportPlanTemplateService)
+
 	// Register routes
-	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler)
+	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler, reportPlanTemplateHandler)
 	return r
 }
