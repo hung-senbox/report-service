@@ -563,3 +563,7 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 func (s *reportService) ApplyTopicPlanTemplateIschool2Report(ctx context.Context, req request.ApplyTemplateToReportRequest) error {
 	return nil
 }
+
+func (s *reportService) GetReportOverView(ctx context.Context, req request.GetReportOverViewRequest) error {
+	return nil
+}
