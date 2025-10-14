@@ -16,7 +16,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"gorm.io/gorm"
 )
 
 type ReportService interface {
@@ -494,7 +493,7 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 	}
 
 	for _, std := range students {
-		report, err := s.repo.GetByStudentTopicTermLanguageAndEditor(
+		report, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(
 			ctx,
 			std.StudentID,
 			req.TopicID,
@@ -502,10 +501,6 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 			req.Language,
 			editor.ID,
 		)
-
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("failed to get report for student %s: %w", std.StudentID, err)
-		}
 
 		var managerCommentPreviousTerm response.ManagerCommentPreviousTerm
 		var teacherReportPrevioiusTerm response.TeacherReportPreviousTerm
