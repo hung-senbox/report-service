@@ -502,50 +502,49 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 			editor.ID,
 		)
 
-		var managerCommentPreviousTerm response.ManagerCommentPreviousTerm
-		var teacherReportPrevioiusTerm response.TeacherReportPreviousTerm
-		previousTerm, _ := s.termGateway.GetPreviousTerm(ctx, report.TermID, std.OrganizationID)
-		if previousTerm != nil {
-			previousTermReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(ctx, report.StudentID, report.TopicID, previousTerm.ID, report.Language, report.EditorID)
-			if previousTermReport != nil {
-				managerCommentPreviousTerm.TermTitle = previousTerm.Title
-				teacherReportPrevioiusTerm.TermTitle = previousTerm.Title
-
-				if nowData, ok := previousTermReport.ReportData["now"].(primitive.M); ok {
-					if comment, ok := nowData["manager_comment"].(string); ok {
-						managerCommentPreviousTerm.Now = comment
-					}
-					if report, ok := nowData["teacher_report"].(string); ok {
-						teacherReportPrevioiusTerm.Now = report
-					}
-					if managerUpdatedAt, ok := nowData["manager_updated_at"].(string); ok {
-						managerCommentPreviousTerm.NowUpdatedAt = managerUpdatedAt
-					}
-					if updatedAt, ok := nowData["updated_at"].(string); ok {
-						teacherReportPrevioiusTerm.NowUpdatedAt = updatedAt
-					}
-				}
-
-				if conclusionData, ok := previousTermReport.ReportData["conclusion"].(primitive.M); ok {
-					if comment, ok := conclusionData["manager_comment"].(string); ok {
-						managerCommentPreviousTerm.Conclusion = comment
-					}
-					if report, ok := conclusionData["teacher_report"].(string); ok {
-						teacherReportPrevioiusTerm.Conclusion = report
-					}
-					if managerUpdatedAt, ok := conclusionData["manager_updated_at"].(string); ok {
-						managerCommentPreviousTerm.ConclusionUpdatedAt = managerUpdatedAt
-					}
-					if updatedAt, ok := conclusionData["updated_at"].(string); ok {
-						teacherReportPrevioiusTerm.ConclusionUpdatedAt = updatedAt
-					}
-				}
-			}
-
-		}
-
 		var reportRes response.ReportResponse
 		if report != nil {
+			var managerCommentPreviousTerm response.ManagerCommentPreviousTerm
+			var teacherReportPrevioiusTerm response.TeacherReportPreviousTerm
+			previousTerm, _ := s.termGateway.GetPreviousTerm(ctx, report.TermID, std.OrganizationID)
+			if previousTerm != nil {
+				previousTermReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(ctx, report.StudentID, report.TopicID, previousTerm.ID, report.Language, report.EditorID)
+				if previousTermReport != nil {
+					managerCommentPreviousTerm.TermTitle = previousTerm.Title
+					teacherReportPrevioiusTerm.TermTitle = previousTerm.Title
+
+					if nowData, ok := previousTermReport.ReportData["now"].(primitive.M); ok {
+						if comment, ok := nowData["manager_comment"].(string); ok {
+							managerCommentPreviousTerm.Now = comment
+						}
+						if report, ok := nowData["teacher_report"].(string); ok {
+							teacherReportPrevioiusTerm.Now = report
+						}
+						if managerUpdatedAt, ok := nowData["manager_updated_at"].(string); ok {
+							managerCommentPreviousTerm.NowUpdatedAt = managerUpdatedAt
+						}
+						if updatedAt, ok := nowData["updated_at"].(string); ok {
+							teacherReportPrevioiusTerm.NowUpdatedAt = updatedAt
+						}
+					}
+
+					if conclusionData, ok := previousTermReport.ReportData["conclusion"].(primitive.M); ok {
+						if comment, ok := conclusionData["manager_comment"].(string); ok {
+							managerCommentPreviousTerm.Conclusion = comment
+						}
+						if report, ok := conclusionData["teacher_report"].(string); ok {
+							teacherReportPrevioiusTerm.Conclusion = report
+						}
+						if managerUpdatedAt, ok := conclusionData["manager_updated_at"].(string); ok {
+							managerCommentPreviousTerm.ConclusionUpdatedAt = managerUpdatedAt
+						}
+						if updatedAt, ok := conclusionData["updated_at"].(string); ok {
+							teacherReportPrevioiusTerm.ConclusionUpdatedAt = updatedAt
+						}
+					}
+				}
+
+			}
 			reportRes = mapper.MapReportToResDTO(report, teacher, managerCommentPreviousTerm, teacherReportPrevioiusTerm, "")
 		} else {
 			reportRes = response.ReportResponse{}
