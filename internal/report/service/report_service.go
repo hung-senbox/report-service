@@ -498,7 +498,7 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 			std.StudentID,
 			req.TopicID,
 			req.TermID,
-			req.Language,
+			req.UniqueLangKey,
 			editor.ID,
 		)
 
