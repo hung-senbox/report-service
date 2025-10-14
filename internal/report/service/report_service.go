@@ -46,15 +46,17 @@ func NewReportService(
 	userGateway gateway.UserGateway,
 	termGateway gateway.TermGateway,
 	mediaGateway gateway.MediaGateway,
+	classroomGateway gateway.ClassroomGateway,
 	repo repository.ReportRepository,
 	historyRepo repository.ReportHistoryRepository,
 ) ReportService {
 	return &reportService{
-		userGateway:  userGateway,
-		termGateway:  termGateway,
-		mediaGateway: mediaGateway,
-		repo:         repo,
-		historyRepo:  historyRepo,
+		userGateway:      userGateway,
+		termGateway:      termGateway,
+		mediaGateway:     mediaGateway,
+		classroomGateway: classroomGateway,
+		repo:             repo,
+		historyRepo:      historyRepo,
 	}
 }
 
