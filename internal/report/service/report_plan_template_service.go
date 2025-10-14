@@ -42,7 +42,6 @@ func (s *reportPlanTemplateService) Upload(ctx context.Context, req request.Uplo
 		Language:       req.Language,
 		IsSchool:       req.IsSchool,
 		Template: model.Template{
-			Goal:           req.Goal,
 			Title:          req.Title,
 			Introduction:   req.Introduction,
 			CurriculumArea: req.CurriculumArea,
