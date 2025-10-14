@@ -10,12 +10,12 @@ type UploadReport4AppRequest struct {
 }
 
 type UploadReport4AWebRequest struct {
-	StudentID  string                 `json:"student_id" binding:"required"`
-	TopicID    string                 `json:"topic_id" binding:"required"`
-	TermID     string                 `json:"term_id" binding:"required"`
-	Language   string                 `json:"language" binding:"required"`
-	Status     string                 `json:"status" binding:"required"`
-	ReportData map[string]interface{} `json:"report_data" binding:"required"`
+	StudentID     string                 `json:"student_id" binding:"required"`
+	TopicID       string                 `json:"topic_id" binding:"required"`
+	TermID        string                 `json:"term_id" binding:"required"`
+	UniqueLangKey string                 `json:"unique_lang_key" binding:"required"`
+	Status        string                 `json:"status" binding:"required"`
+	ReportData    map[string]interface{} `json:"report_data" binding:"required"`
 }
 
 type NoteRequest struct {
@@ -91,11 +91,11 @@ type Title struct {
 }
 
 type UploadClassroomReport4WebRequest struct {
-	StudentID   string                 `json:"student_id" binding:"required"`
-	TopicID     string                 `json:"topic_id" binding:"required"`
-	TermID      string                 `json:"term_id" binding:"required"`
-	Language    string                 `json:"language" binding:"required"`
-	ClassroomID string                 `json:"classroom_id" binding:"required"`
-	Status      string                 `json:"status" binding:"required"`
-	ReportData  map[string]interface{} `json:"report_data" binding:"required"`
+	StudentID     string                 `json:"student_id" binding:"required"`
+	TopicID       string                 `json:"topic_id" binding:"required"`
+	TermID        string                 `json:"term_id" binding:"required"`
+	UniqueLangKey string                 `json:"unique_lang_key" binding:"required"`
+	ClassroomID   string                 `json:"classroom_id" binding:"required"`
+	Status        string                 `json:"status" binding:"required"`
+	ReportData    map[string]interface{} `json:"report_data" binding:"required"`
 }

@@ -41,3 +41,9 @@ type TeacherReportPreviousTerm struct {
 	ConclusionUpdatedAt string `json:"conclusion_updated_at"`
 	TermTitle           string `json:"term_title"`
 }
+
+type ClassroomReportResponse4Web struct {
+	StudentID   string         `json:"student_id"`
+	StudentName string         `json:"student_name"`
+	Report      ReportResponse `json:"report"`
+}

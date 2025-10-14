@@ -7,5 +7,7 @@ type StudentResponse struct {
 }
 
 type Student4ClassroomReport struct {
-	StudentID string `json:"user_id"`
+	StudentID      string `json:"user_id"`
+	StudentName    string `json:"user_name"`
+	OrganizationID string `json:"organization_id"`
 }

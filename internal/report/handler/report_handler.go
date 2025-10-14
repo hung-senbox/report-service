@@ -124,3 +124,23 @@ func (h *ReportHandler) UploadClassroomReport(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Report uploaded successfully", nil)
 }
+
+func (h *ReportHandler) GetClassroomReports4Web(c *gin.Context) {
+	var req request.GetClassroomReportRequest4Web
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
+		return
+	}
+
+	reports, err := h.service.GetClassroomReports4Web(c.Request.Context(), req)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			helper.SendSuccess(c, http.StatusOK, "Report not found", nil)
+			return
+		}
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", reports)
+}

@@ -25,6 +25,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 			{
 				reportsClassroomAdmin.POST("/plan-templates", rph.UploadReportPlanTemplate)
 				reportsClassroomAdmin.POST("", h.UploadClassroomReport)
+				reportsClassroomAdmin.POST("/get-report", h.GetClassroomReports4Web)
 			}
 		}
 	}
