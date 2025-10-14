@@ -28,6 +28,7 @@ type ReportService interface {
 	GetReport4App(ctx context.Context, req *request.GetReportRequest4App) (response.ReportResponse, error)
 	GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error)
 	GetTeacherReportTasks(ctx context.Context) ([]response.GetTeacherReportTasksResponse, error)
+	UploadClassroomReport(ctx context.Context, req request.UploadClassroomReport4WebRequest) error
 }
 
 type reportService struct {
@@ -128,7 +129,7 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 	}
 
 	// create or update report
-	err := s.repo.CreateOrUpdate4App(ctx, report)
+	err := s.repo.CreateOrUpdateStudentView4App(ctx, report)
 	if err != nil {
 		return err
 	}
@@ -138,6 +139,7 @@ func (s *reportService) UploadReport4App(ctx context.Context, req *request.Uploa
 		ID:         primitive.NewObjectID(),
 		ReportID:   report.ID,
 		EditorID:   report.EditorID,
+		Type:       string(constants.ReportHistoryTypeAppStudentView),
 		EditorRole: string(constants.ReportHistoryRoleTeacher),
 		Report:     report,
 		Timestamp:  time.Now(),
@@ -358,7 +360,7 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 	}
 
 	// create or update report
-	err := s.repo.CreateOrUpdate4Web(ctx, report)
+	err := s.repo.CreateOrUpdateStudentView4Web(ctx, report)
 	if err != nil {
 		return err
 	}
@@ -368,6 +370,7 @@ func (s *reportService) UploadReport4Web(ctx context.Context, req *request.Uploa
 		ID:         primitive.NewObjectID(),
 		ReportID:   report.ID,
 		EditorID:   helper.GetUserID(ctx),
+		Type:       string(constants.ReportHistoryTypeWebStudentView),
 		EditorRole: string(constants.ReportHistoryRoleManager),
 		Report:     report,
 		Timestamp:  time.Now(),
@@ -430,4 +433,45 @@ func (s *reportService) getLatestDataTermID(
 	}
 
 	return "", nil
+}
+
+func (s *reportService) UploadClassroomReport(ctx context.Context, req request.UploadClassroomReport4WebRequest) error {
+	report := &model.Report{
+		StudentID:  req.StudentID,
+		TopicID:    req.TopicID,
+		TermID:     req.TermID,
+		Language:   req.Language,
+		Status:     req.Status,
+		ReportData: req.ReportData,
+	}
+
+	// check report da duoc tao tu app chua ?
+	reportExist, _ := s.repo.GetByStudentTopicTermAndLanguage(ctx, req.StudentID, req.TopicID, req.TermID, req.Language)
+	if reportExist == nil {
+		return errors.New("report not found, need to create report from teacher")
+	}
+
+	// create or update report
+	err := s.repo.CreateOrUpdateClassroomView4Web(ctx, report)
+	if err != nil {
+		return err
+	}
+
+	// save report history
+	history := &model.ReportHistory{
+		ID:          primitive.NewObjectID(),
+		ReportID:    report.ID,
+		EditorID:    helper.GetUserID(ctx),
+		ClassroomID: req.ClassroomID,
+		Type:        string(constants.ReportHistoryTypeWebClassroomView),
+		EditorRole:  string(constants.ReportHistoryRoleManager),
+		Report:      report,
+		Timestamp:   time.Now(),
+	}
+
+	if err := s.historyRepo.Create(ctx, history); err != nil {
+		return err
+	}
+
+	return nil
 }

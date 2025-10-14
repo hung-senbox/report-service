@@ -28,14 +28,14 @@ type NoteRequest struct {
 }
 
 type ReportDataRequest struct {
-	Before       Before       `json:"before"`
-	Now          Now          `json:"now"`
-	Conclusion   Conclusion   `json:"conclusion"`
-	Goal         Goal         `json:"goal"`
-	Introduction Introduction `json:"introduction"`
-	PreviousTerm PreviousTerm `json:"previous_term"`
-	Title        Title        `json:"title"`
-	SubTitle     SubTitle     `json:"sub_title"`
+	Before         Before       `json:"before"`
+	Now            Now          `json:"now"`
+	Conclusion     Conclusion   `json:"conclusion"`
+	Goal           Goal         `json:"goal"`
+	Introduction   Introduction `json:"introduction"`
+	PreviousTerm   PreviousTerm `json:"previous_term"`
+	Title          Title        `json:"title"`
+	CurriculumArea SubTitle     `json:"curriculum_area"`
 }
 
 type Before struct {
@@ -88,4 +88,14 @@ type SubTitle struct {
 
 type Title struct {
 	Content string `json:"content"`
+}
+
+type UploadClassroomReport4WebRequest struct {
+	StudentID   string                 `json:"student_id" binding:"required"`
+	TopicID     string                 `json:"topic_id" binding:"required"`
+	TermID      string                 `json:"term_id" binding:"required"`
+	Language    string                 `json:"language" binding:"required"`
+	ClassroomID string                 `json:"classroom_id" binding:"required"`
+	Status      string                 `json:"status" binding:"required"`
+	ReportData  map[string]interface{} `json:"report_data" binding:"required"`
 }

@@ -5,3 +5,7 @@ type StudentResponse struct {
 	OrganizationID string `json:"organization_id"`
 	Name           string `json:"name"`
 }
+
+type Student4ClassroomReport struct {
+	StudentID string `json:"user_id"`
+}

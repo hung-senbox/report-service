@@ -109,3 +109,18 @@ func (h *ReportHandler) UploadReport4Web(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Report uploaded successfully", nil)
 }
+
+func (h *ReportHandler) UploadClassroomReport(c *gin.Context) {
+	var req request.UploadClassroomReport4WebRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
+		return
+	}
+
+	if err := h.service.UploadClassroomReport(c.Request.Context(), req); err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report uploaded successfully", nil)
+}

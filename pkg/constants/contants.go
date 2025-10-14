@@ -135,3 +135,11 @@ const (
 	ReportHistoryRoleTeacher ReportHistoryRole = "teacher"
 	ReportHistoryRoleManager ReportHistoryRole = "manager"
 )
+
+type ReportHistoryType string
+
+const (
+	ReportHistoryTypeAppStudentView   ReportHistoryRole = "app_student_view"
+	ReportHistoryTypeWebStudentView   ReportHistoryRole = "web_student_view"
+	ReportHistoryTypeWebClassroomView ReportHistoryRole = "web_classroom_view"
+)

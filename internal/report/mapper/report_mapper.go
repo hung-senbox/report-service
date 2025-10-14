@@ -37,9 +37,9 @@ func MapReportToResDTO(
 		}
 	}
 
-	// --- Thêm "sub_title" nếu chưa có ---
-	if _, ok := report.ReportData["sub_title"]; !ok {
-		report.ReportData["sub_title"] = bson.M{
+	// --- Thêm "curriculum_area" nếu chưa có ---
+	if _, ok := report.ReportData["curriculum_area"]; !ok {
+		report.ReportData["curriculum_area"] = bson.M{
 			"content":    "",
 			"updated_at": "",
 		}

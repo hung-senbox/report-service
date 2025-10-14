@@ -23,8 +23,9 @@ type ReportRepository interface {
 	GetByStudentTopicTermAndLanguage(ctx context.Context, studentID, topicID, termID, language string) (*model.Report, error)
 	GetByStudentTopicTermLanguageAndEditor(ctx context.Context, studentID, topicID, termID, language, editorID string) (*model.Report, error)
 	GetAllByEditorID(ctx context.Context, editorID string) ([]*model.Report, error)
-	CreateOrUpdate4App(ctx context.Context, report *model.Report) error
-	CreateOrUpdate4Web(ctx context.Context, report *model.Report) error
+	CreateOrUpdateStudentView4App(ctx context.Context, report *model.Report) error
+	CreateOrUpdateStudentView4Web(ctx context.Context, report *model.Report) error
+	CreateOrUpdateClassroomView4Web(ctx context.Context, report *model.Report) error
 }
 
 type reportRepository struct {
@@ -183,7 +184,7 @@ func (r *reportRepository) GetAllByEditorID(ctx context.Context, editorID string
 	return reports, nil
 }
 
-func (r *reportRepository) CreateOrUpdate4App(ctx context.Context, report *model.Report) error {
+func (r *reportRepository) CreateOrUpdateStudentView4App(ctx context.Context, report *model.Report) error {
 	filter := bson.M{
 		"student_id": report.StudentID,
 		"topic_id":   report.TopicID,
@@ -201,7 +202,7 @@ func (r *reportRepository) CreateOrUpdate4App(ctx context.Context, report *model
 
 	// merge report_data
 	for section, data := range report.ReportData {
-		if section == "goal" || section == "title" || section == "sub_title" {
+		if section == "goal" || section == "title" || section == "curriculum_area" {
 			continue
 		}
 		subData, ok := data.(map[string]interface{})
@@ -230,7 +231,7 @@ func (r *reportRepository) CreateOrUpdate4App(ctx context.Context, report *model
 	return nil
 }
 
-func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model.Report) error {
+func (r *reportRepository) CreateOrUpdateStudentView4Web(ctx context.Context, report *model.Report) error {
 	filter := bson.M{
 		"student_id": report.StudentID,
 		"topic_id":   report.TopicID,
@@ -251,7 +252,47 @@ func (r *reportRepository) CreateOrUpdate4Web(ctx context.Context, report *model
 			continue
 		}
 
-		if section == "goal" || section == "title" || section == "sub_title" || section == "introduction" {
+		for k, v := range subData {
+			if strings.HasPrefix(k, "manager_") || k == "status" {
+				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
+			}
+		}
+	}
+
+	opts := options.Update().SetUpsert(false)
+	res, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("update report (web) failed: %w", err)
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("report not found")
+	}
+
+	return nil
+}
+
+func (r *reportRepository) CreateOrUpdateClassroomView4Web(ctx context.Context, report *model.Report) error {
+	filter := bson.M{
+		"student_id": report.StudentID,
+		"topic_id":   report.TopicID,
+		"term_id":    report.TermID,
+		"language":   report.Language,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":     report.Status,
+			"updated_at": time.Now(),
+		},
+	}
+
+	for section, data := range report.ReportData {
+		subData, ok := data.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if section == "goal" || section == "title" || section == "curriculum_area" || section == "introduction" {
 			for k, v := range subData {
 				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
 			}

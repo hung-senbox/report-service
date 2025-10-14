@@ -21,7 +21,11 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 			reportsAdmin.GET("/histories", rh.GetByEditor4App)
 
 			// plan template
-			reportsAdmin.POST("/plan-template", rph.UploadReportPlanTemplate)
+			reportsClassroomAdmin := reportsAdmin.Group("/classrooms")
+			{
+				reportsClassroomAdmin.POST("/plan-templates", rph.UploadReportPlanTemplate)
+				reportsClassroomAdmin.POST("", h.UploadClassroomReport)
+			}
 		}
 	}
 
