@@ -454,6 +454,15 @@ func (s *reportService) UploadClassroomReport(ctx context.Context, req request.U
 }
 
 func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error) {
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current user")
+	}
+
+	if currentUser == nil {
+		return nil, fmt.Errorf("current user not found")
+	}
+
 	var reports = make([]response.ClassroomReportResponse4Web, 0)
 
 	// Lấy danh sách học sinh trong lớp
@@ -556,21 +565,30 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 	}
 
 	// Lấy template
-	// schoolTemplate, _ := s.templateRepo.GetSchoolTemplate(ctx, req.SchoolID)
-	// classroomTemplate, _ := s.templateRepo.GetClassroomTemplate(ctx, req.ClassroomID)
+	reportTemplateSchool, _ := s.reportPlanTemplateRepo.GetSchoolTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, currentUser.OrganizationAdmin.ID)
+	reportTemplateClassroom, _ := s.reportPlanTemplateRepo.GetClassroomTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, req.ClassroomID, currentUser.OrganizationAdmin.ID)
+
+	var schoolTemplate model.Template
+	var classroomTemplate model.Template
+	if reportTemplateSchool != nil {
+		schoolTemplate = model.Template{
+			Title:          reportTemplateSchool.Template.Title,
+			Introduction:   reportTemplateSchool.Template.Introduction,
+			CurriculumArea: reportTemplateSchool.Template.CurriculumArea,
+		}
+	}
+	if reportTemplateClassroom != nil {
+		classroomTemplate = model.Template{
+			Title:          reportTemplateClassroom.Template.Title,
+			Introduction:   reportTemplateClassroom.Template.Introduction,
+			CurriculumArea: reportTemplateClassroom.Template.CurriculumArea,
+		}
+	}
 
 	return &response.GetClassroomReportResponse4Web{
-		Reports: reports,
-		SchoolTemplate: model.Template{
-			Title:          "title",
-			Introduction:   "introduction",
-			CurriculumArea: "curriculum_area",
-		},
-		ClassroomTempate: model.Template{
-			Title:          "title",
-			Introduction:   "introduction",
-			CurriculumArea: "curriculum_area",
-		},
+		Reports:          reports,
+		SchoolTemplate:   schoolTemplate,
+		ClassroomTempate: classroomTemplate,
 	}, nil
 }
 
@@ -650,7 +668,7 @@ func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Con
 	}
 
 	// get students by classroom id from gw
-	students, err := s.classroomGateway.GetStudentsByClassroomID(ctx, req.ClassroomID)
+	students, err := s.classroomGateway.GetStudentsByClassroomID(ctx, req.ClassroomID, req.TermID)
 	if err != nil {
 		return fmt.Errorf("failed to get students by classroom id: %w", err)
 	}

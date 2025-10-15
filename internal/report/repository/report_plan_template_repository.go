@@ -14,6 +14,8 @@ import (
 type ReportPlanTemplateRepositopry interface {
 	Create(ctx context.Context, rpt *model.ReportPlanTemplate) error
 	CreateOrUpdate(ctx context.Context, rpt *model.ReportPlanTemplate) error
+	GetSchoolTemplate(ctx context.Context, termID, topicID, language, organizationID string) (*model.ReportPlanTemplate, error)
+	GetClassroomTemplate(ctx context.Context, termID, topicID, language, classroomID, organizationID string) (*model.ReportPlanTemplate, error)
 }
 
 type reportPlanTemplateRepository struct {
@@ -69,4 +71,33 @@ func (r *reportPlanTemplateRepository) CreateOrUpdate(ctx context.Context, rpt *
 
 	_, err := r.collection.UpdateOne(ctx, filter, update, opts)
 	return err
+}
+
+func (r *reportPlanTemplateRepository) GetSchoolTemplate(ctx context.Context, termID, topicID, language, organizationID string) (*model.ReportPlanTemplate, error) {
+	filter := bson.M{
+		"term_id":         termID,
+		"topic_id":        topicID,
+		"language":        language,
+		"organization_id": organizationID,
+		"is_school":       true,
+	}
+
+	var reportTemplate *model.ReportPlanTemplate
+	err := r.collection.FindOne(ctx, filter).Decode(&reportTemplate)
+	return reportTemplate, err
+}
+
+func (r *reportPlanTemplateRepository) GetClassroomTemplate(ctx context.Context, termID, topicID, language, organizationID, classroomID string) (*model.ReportPlanTemplate, error) {
+	filter := bson.M{
+		"term_id":         termID,
+		"topic_id":        topicID,
+		"language":        language,
+		"organization_id": organizationID,
+		"is_school":       false,
+		"classroom_id":    classroomID,
+	}
+
+	var reportTemplate *model.ReportPlanTemplate
+	err := r.collection.FindOne(ctx, filter).Decode(&reportTemplate)
+	return reportTemplate, err
 }
