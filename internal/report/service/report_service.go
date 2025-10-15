@@ -462,18 +462,37 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 	if currentUser == nil {
 		return nil, fmt.Errorf("current user not found")
 	}
-
+	res := &response.GetClassroomReportResponse4Web{}
 	var reports = make([]response.ClassroomReportResponse4Web, 0)
 
-	// Lấy danh sách học sinh trong lớp
-	students, err := s.classroomGateway.GetStudents4ClassroomReport(ctx, req.TermID, req.ClassroomID, req.TeacherID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get students in classroom: %w", err)
+	// Lấy template
+	reportTemplateSchool, _ := s.reportPlanTemplateRepo.GetSchoolTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, currentUser.OrganizationAdmin.ID)
+	reportTemplateClassroom, _ := s.reportPlanTemplateRepo.GetClassroomTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, req.ClassroomID, currentUser.OrganizationAdmin.ID)
+
+	var schoolTemplate model.Template
+	var classroomTemplate model.Template
+	if reportTemplateSchool != nil {
+		schoolTemplate = model.Template{
+			Title:          reportTemplateSchool.Template.Title,
+			Introduction:   reportTemplateSchool.Template.Introduction,
+			CurriculumArea: reportTemplateSchool.Template.CurriculumArea,
+		}
 	}
+	if reportTemplateClassroom != nil {
+		classroomTemplate = model.Template{
+			Title:          reportTemplateClassroom.Template.Title,
+			Introduction:   reportTemplateClassroom.Template.Introduction,
+			CurriculumArea: reportTemplateClassroom.Template.CurriculumArea,
+		}
+	}
+
+	res.SchoolTemplate = schoolTemplate
+	res.ClassroomTempate = classroomTemplate
+
+	// Lấy danh sách học sinh trong lớp
+	students, _ := s.classroomGateway.GetStudents4ClassroomReport(ctx, req.TermID, req.ClassroomID, req.TeacherID)
 	if len(students) == 0 {
-		return &response.GetClassroomReportResponse4Web{
-			Reports: []response.ClassroomReportResponse4Web{},
-		}, errors.New("no students found in classroom")
+		return res, nil
 	}
 
 	// Lấy thông tin editor
@@ -564,32 +583,9 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 		})
 	}
 
-	// Lấy template
-	reportTemplateSchool, _ := s.reportPlanTemplateRepo.GetSchoolTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, currentUser.OrganizationAdmin.ID)
-	reportTemplateClassroom, _ := s.reportPlanTemplateRepo.GetClassroomTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, req.ClassroomID, currentUser.OrganizationAdmin.ID)
+	res.Reports = reports
 
-	var schoolTemplate model.Template
-	var classroomTemplate model.Template
-	if reportTemplateSchool != nil {
-		schoolTemplate = model.Template{
-			Title:          reportTemplateSchool.Template.Title,
-			Introduction:   reportTemplateSchool.Template.Introduction,
-			CurriculumArea: reportTemplateSchool.Template.CurriculumArea,
-		}
-	}
-	if reportTemplateClassroom != nil {
-		classroomTemplate = model.Template{
-			Title:          reportTemplateClassroom.Template.Title,
-			Introduction:   reportTemplateClassroom.Template.Introduction,
-			CurriculumArea: reportTemplateClassroom.Template.CurriculumArea,
-		}
-	}
-
-	return &response.GetClassroomReportResponse4Web{
-		Reports:          reports,
-		SchoolTemplate:   schoolTemplate,
-		ClassroomTempate: classroomTemplate,
-	}, nil
+	return res, nil
 }
 
 func (s *reportService) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error {
