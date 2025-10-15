@@ -25,9 +25,6 @@ func NewReportPlanTemplateRepository(collection *mongo.Collection) ReportPlanTem
 }
 
 func (r *reportPlanTemplateRepository) Create(ctx context.Context, rpt *model.ReportPlanTemplate) error {
-	if rpt.ID == "" {
-		rpt.ID = primitive.NewObjectID().Hex()
-	}
 	now := time.Now().Unix()
 	rpt.CreatedAt = now
 	rpt.UpdatedAt = now
@@ -47,8 +44,8 @@ func (r *reportPlanTemplateRepository) CreateOrUpdate(ctx context.Context, rpt *
 
 	now := time.Now().Unix()
 	rpt.UpdatedAt = now
-	if rpt.ID == "" {
-		rpt.ID = primitive.NewObjectID().Hex()
+	if rpt.ID == primitive.NilObjectID {
+		rpt.ID = primitive.NewObjectID()
 	}
 
 	update := bson.M{

@@ -144,3 +144,33 @@ func (h *ReportHandler) GetClassroomReports4Web(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", reports)
 }
+
+func (h *ReportHandler) ApplyTopicPlanTemplateIsSchool2Report(c *gin.Context) {
+	var req request.ApplyTemplateIsSchoolToReportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
+		return
+	}
+
+	if err := h.service.ApplyTopicPlanTemplateIsSchool2Report(c.Request.Context(), req); err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report template applied successfully", nil)
+}
+
+func (h *ReportHandler) ApplyTopicPlanTemplateIsClassroom2Report(c *gin.Context) {
+	var req request.ApplyTemplateIsClassroomToReportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
+		return
+	}
+
+	if err := h.service.ApplyTopicPlanTemplateIsClassroom2Report(c.Request.Context(), req); err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report template applied successfully", nil)
+}

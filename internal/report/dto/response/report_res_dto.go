@@ -2,6 +2,7 @@ package response
 
 import (
 	gw_response "report-service/internal/gateway/dto/response"
+	"report-service/internal/report/model"
 	"time"
 )
 
@@ -46,4 +47,10 @@ type ClassroomReportResponse4Web struct {
 	StudentID   string         `json:"student_id"`
 	StudentName string         `json:"student_name"`
 	Report      ReportResponse `json:"report"`
+}
+
+type GetClassroomReportResponse4Web struct {
+	Reports          []ClassroomReportResponse4Web `json:"reports"`
+	SchoolTemplate   model.Template                `json:"school_template"`
+	ClassroomTempate model.Template                `json:"classroom_template"`
 }

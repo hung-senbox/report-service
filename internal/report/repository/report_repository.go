@@ -26,6 +26,8 @@ type ReportRepository interface {
 	CreateOrUpdateStudentView4App(ctx context.Context, report *model.Report) error
 	CreateOrUpdateStudentView4Web(ctx context.Context, report *model.Report) error
 	CreateOrUpdateClassroomView4Web(ctx context.Context, report *model.Report) error
+	GetTopicsByTermTopicLanguage(ctx context.Context, termID, topicID, language string) ([]*model.Report, error)
+	ApplyTopicPlanTemplate(ctx context.Context, report *model.Report) error
 }
 
 type reportRepository struct {
@@ -310,6 +312,61 @@ func (r *reportRepository) CreateOrUpdateClassroomView4Web(ctx context.Context, 
 	res, err := r.collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return fmt.Errorf("update report (web) failed: %w", err)
+	}
+	if res.MatchedCount == 0 {
+		return errors.New("report not found")
+	}
+
+	return nil
+}
+
+func (r *reportRepository) GetTopicsByTermTopicLanguage(ctx context.Context, termID, topicID, language string) ([]*model.Report, error) {
+	filter := bson.M{
+		"term_id":  termID,
+		"topic_id": topicID,
+		"language": language,
+	}
+
+	var reports []*model.Report
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if err = cursor.All(ctx, &reports); err != nil {
+		return nil, err
+	}
+	return reports, nil
+}
+
+func (r *reportRepository) ApplyTopicPlanTemplate(ctx context.Context, report *model.Report) error {
+	filter := bson.M{
+		"student_id": report.StudentID,
+		"topic_id":   report.TopicID,
+		"term_id":    report.TermID,
+		"language":   report.Language,
+	}
+
+	update := bson.M{
+		"$set": bson.M{},
+	}
+
+	for _, section := range []string{"title", "introduction", "curriculum_area"} {
+		subData, ok := report.ReportData[section].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		for k, v := range subData {
+			update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
+		}
+	}
+
+	// cập nhật updated_at
+	update["$set"].(bson.M)["updated_at"] = time.Now()
+
+	opts := options.Update().SetUpsert(false)
+	res, err := r.collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("apply template failed: %w", err)
 	}
 	if res.MatchedCount == 0 {
 		return errors.New("report not found")

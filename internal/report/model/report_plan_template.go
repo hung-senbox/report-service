@@ -1,15 +1,18 @@
 package model
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type ReportPlanTemplate struct {
-	ID             string   `json:"id" bson:"_id"`
-	Template       Template `json:"template" bson:"template"`
-	OrganizationID string   `json:"organization_id" bson:"organization_id"`
-	TopicID        string   `json:"topic_id" bson:"topic_id"`
-	TermID         string   `json:"term_id" bson:"term_id"`
-	Language       string   `json:"language" bson:"language"`
-	IsSchool       bool     `json:"is_school" bson:"is_school"`
-	CreatedAt      int64    `json:"created_at" bson:"created_at"`
-	UpdatedAt      int64    `json:"updated_at" bson:"updated_at"`
+	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	Template       Template           `json:"template" bson:"template"`
+	OrganizationID string             `json:"organization_id" bson:"organization_id"`
+	TopicID        string             `json:"topic_id" bson:"topic_id"`
+	TermID         string             `json:"term_id" bson:"term_id"`
+	ClassroomID    string             `json:"classroom_id" bson:"classroom_id"`
+	Language       string             `json:"language" bson:"language"`
+	IsSchool       bool               `json:"is_school" bson:"is_school"`
+	CreatedAt      int64              `json:"created_at" bson:"created_at"`
+	UpdatedAt      int64              `json:"updated_at" bson:"updated_at"`
 }
 
 type Template struct {

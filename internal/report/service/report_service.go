@@ -12,6 +12,7 @@ import (
 	"report-service/internal/report/model"
 	"report-service/internal/report/repository"
 	"report-service/pkg/constants"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,9 +20,6 @@ import (
 )
 
 type ReportService interface {
-	Create(ctx context.Context, report *model.Report) (*model.Report, error)
-	GetByID(ctx context.Context, id string) (*model.Report, error)
-	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context) ([]response.ReportResponse, error)
 	UploadReport4App(ctx context.Context, req *request.UploadReport4AppRequest) error
 	UploadReport4Web(ctx context.Context, req *request.UploadReport4AWebRequest) error
@@ -29,16 +27,19 @@ type ReportService interface {
 	GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error)
 	GetTeacherReportTasks(ctx context.Context) ([]response.GetTeacherReportTasksResponse, error)
 	UploadClassroomReport(ctx context.Context, req request.UploadClassroomReport4WebRequest) error
-	GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) ([]*response.ClassroomReportResponse4Web, error)
+	GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error)
+	ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error
+	ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Context, req request.ApplyTemplateIsClassroomToReportRequest) error
 }
 
 type reportService struct {
-	userGateway      gateway.UserGateway
-	termGateway      gateway.TermGateway
-	mediaGateway     gateway.MediaGateway
-	classroomGateway gateway.ClassroomGateway
-	repo             repository.ReportRepository
-	historyRepo      repository.ReportHistoryRepository
+	userGateway            gateway.UserGateway
+	termGateway            gateway.TermGateway
+	mediaGateway           gateway.MediaGateway
+	classroomGateway       gateway.ClassroomGateway
+	repo                   repository.ReportRepository
+	historyRepo            repository.ReportHistoryRepository
+	reportPlanTemplateRepo repository.ReportPlanTemplateRepositopry
 }
 
 func NewReportService(
@@ -48,36 +49,17 @@ func NewReportService(
 	classroomGateway gateway.ClassroomGateway,
 	repo repository.ReportRepository,
 	historyRepo repository.ReportHistoryRepository,
+	reportPlanTemplateRepo repository.ReportPlanTemplateRepositopry,
 ) ReportService {
 	return &reportService{
-		userGateway:      userGateway,
-		termGateway:      termGateway,
-		mediaGateway:     mediaGateway,
-		classroomGateway: classroomGateway,
-		repo:             repo,
-		historyRepo:      historyRepo,
+		userGateway:            userGateway,
+		termGateway:            termGateway,
+		mediaGateway:           mediaGateway,
+		classroomGateway:       classroomGateway,
+		repo:                   repo,
+		historyRepo:            historyRepo,
+		reportPlanTemplateRepo: reportPlanTemplateRepo,
 	}
-}
-
-func (s *reportService) Create(ctx context.Context, report *model.Report) (*model.Report, error) {
-	if report == nil {
-		return nil, errors.New("report is nil")
-	}
-	return s.repo.Create(ctx, report)
-}
-
-func (s *reportService) GetByID(ctx context.Context, id string) (*model.Report, error) {
-	if id == "" {
-		return nil, errors.New("id is required")
-	}
-	return s.repo.GetByID(ctx, id)
-}
-
-func (s *reportService) Delete(ctx context.Context, id string) error {
-	if id == "" {
-		return errors.New("id is required")
-	}
-	return s.repo.Delete(ctx, id)
 }
 
 func (s *reportService) GetAll(ctx context.Context) ([]response.ReportResponse, error) {
@@ -471,8 +453,8 @@ func (s *reportService) UploadClassroomReport(ctx context.Context, req request.U
 	return nil
 }
 
-func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) ([]*response.ClassroomReportResponse4Web, error) {
-	var res = make([]*response.ClassroomReportResponse4Web, 0)
+func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error) {
+	var reports = make([]response.ClassroomReportResponse4Web, 0)
 
 	// Lấy danh sách học sinh trong lớp
 	students, err := s.classroomGateway.GetStudents4ClassroomReport(ctx, req.TermID, req.ClassroomID, req.TeacherID)
@@ -480,17 +462,19 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 		return nil, fmt.Errorf("failed to get students in classroom: %w", err)
 	}
 	if len(students) == 0 {
-		return res, errors.New("no students found in classroom")
+		return &response.GetClassroomReportResponse4Web{
+			Reports: []response.ClassroomReportResponse4Web{},
+		}, errors.New("no students found in classroom")
 	}
 
 	// Lấy thông tin editor
 	editor, err := s.userGateway.GetUserByTeacher(ctx, req.TeacherID)
-	// get teacher
-	teacher, _ := s.userGateway.GetTeacherInfo(ctx, editor.ID, students[0].OrganizationID)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get editor (teacher): %w", err)
 	}
+
+	// Lấy thông tin teacher
+	teacher, _ := s.userGateway.GetTeacherInfo(ctx, editor.ID, students[0].OrganizationID)
 
 	for _, std := range students {
 		report, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(
@@ -506,9 +490,17 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 		if report != nil {
 			var managerCommentPreviousTerm response.ManagerCommentPreviousTerm
 			var teacherReportPrevioiusTerm response.TeacherReportPreviousTerm
+
 			previousTerm, _ := s.termGateway.GetPreviousTerm(ctx, report.TermID, std.OrganizationID)
 			if previousTerm != nil {
-				previousTermReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(ctx, report.StudentID, report.TopicID, previousTerm.ID, report.Language, report.EditorID)
+				previousTermReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(
+					ctx,
+					report.StudentID,
+					report.TopicID,
+					previousTerm.ID,
+					report.Language,
+					report.EditorID,
+				)
 				if previousTermReport != nil {
 					managerCommentPreviousTerm.TermTitle = previousTerm.Title
 					teacherReportPrevioiusTerm.TermTitle = previousTerm.Title
@@ -517,8 +509,8 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 						if comment, ok := nowData["manager_comment"].(string); ok {
 							managerCommentPreviousTerm.Now = comment
 						}
-						if report, ok := nowData["teacher_report"].(string); ok {
-							teacherReportPrevioiusTerm.Now = report
+						if r, ok := nowData["teacher_report"].(string); ok {
+							teacherReportPrevioiusTerm.Now = r
 						}
 						if managerUpdatedAt, ok := nowData["manager_updated_at"].(string); ok {
 							managerCommentPreviousTerm.NowUpdatedAt = managerUpdatedAt
@@ -532,8 +524,8 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 						if comment, ok := conclusionData["manager_comment"].(string); ok {
 							managerCommentPreviousTerm.Conclusion = comment
 						}
-						if report, ok := conclusionData["teacher_report"].(string); ok {
-							teacherReportPrevioiusTerm.Conclusion = report
+						if r, ok := conclusionData["teacher_report"].(string); ok {
+							teacherReportPrevioiusTerm.Conclusion = r
 						}
 						if managerUpdatedAt, ok := conclusionData["manager_updated_at"].(string); ok {
 							managerCommentPreviousTerm.ConclusionUpdatedAt = managerUpdatedAt
@@ -543,24 +535,185 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 						}
 					}
 				}
-
 			}
-			reportRes = mapper.MapReportToResDTO(report, teacher, managerCommentPreviousTerm, teacherReportPrevioiusTerm, "")
+
+			reportRes = mapper.MapReportToResDTO(
+				report,
+				teacher,
+				managerCommentPreviousTerm,
+				teacherReportPrevioiusTerm,
+				"",
+			)
 		} else {
 			reportRes = response.ReportResponse{}
 		}
 
-		res = append(res, &response.ClassroomReportResponse4Web{
+		reports = append(reports, response.ClassroomReportResponse4Web{
 			StudentID:   std.StudentID,
 			StudentName: std.StudentName,
 			Report:      reportRes,
 		})
 	}
 
-	return res, nil
+	// Lấy template
+	// schoolTemplate, _ := s.templateRepo.GetSchoolTemplate(ctx, req.SchoolID)
+	// classroomTemplate, _ := s.templateRepo.GetClassroomTemplate(ctx, req.ClassroomID)
+
+	return &response.GetClassroomReportResponse4Web{
+		Reports: reports,
+		SchoolTemplate: model.Template{
+			Title:          "title",
+			Introduction:   "introduction",
+			CurriculumArea: "curriculum_area",
+		},
+		ClassroomTempate: model.Template{
+			Title:          "title",
+			Introduction:   "introduction",
+			CurriculumArea: "curriculum_area",
+		},
+	}, nil
 }
 
-func (s *reportService) ApplyTopicPlanTemplateIschool2Report(ctx context.Context, req request.ApplyTemplateToReportRequest) error {
+func (s *reportService) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error {
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get current user")
+	}
+
+	if currentUser.IsSuperAdmin {
+		return errors.New("super admin cannot apply template to report")
+	}
+
+	// Lấy danh sách reports theo term, topic, language
+	reports, err := s.repo.GetTopicsByTermTopicLanguage(ctx, req.TermID, req.TopicID, req.UniqueLangKey)
+	if err != nil {
+		return fmt.Errorf("failed to get reports: %w", err)
+	}
+	if len(reports) == 0 {
+		return errors.New("no reports found for the given term/topic/language")
+	}
+
+	// tao report plan template
+	rpt := &model.ReportPlanTemplate{
+		OrganizationID: currentUser.OrganizationAdmin.ID,
+		TopicID:        req.TopicID,
+		TermID:         req.TermID,
+		Language:       req.UniqueLangKey,
+		IsSchool:       true,
+		Template: model.Template{
+			Title:          req.Title,
+			Introduction:   req.Introduction,
+			CurriculumArea: req.CurriculumArea,
+		},
+	}
+	if err := s.reportPlanTemplateRepo.CreateOrUpdate(ctx, rpt); err != nil {
+		return fmt.Errorf("failed to create report plan template: %w", err)
+	}
+	// Áp dụng template cho từng report
+	for _, report := range reports {
+		report.ReportData = toBsonM(report.ReportData)
+
+		// --- Chuẩn bị dữ liệu template ---
+		title := toBsonM(report.ReportData["title"])
+		title["content"] = req.Title
+		report.ReportData["title"] = title
+
+		intro := toBsonM(report.ReportData["introduction"])
+		intro["content"] = req.Introduction
+		report.ReportData["introduction"] = intro
+
+		cur := toBsonM(report.ReportData["curriculum_area"])
+		cur["content"] = req.CurriculumArea
+		report.ReportData["curriculum_area"] = cur
+
+		// --- Gọi repository update ---
+		if err := s.repo.ApplyTopicPlanTemplate(ctx, report); err != nil {
+			// nếu không tìm thấy report thì bỏ qua
+			if strings.Contains(err.Error(), "report not found") {
+				continue
+			}
+			return fmt.Errorf("failed to apply template to report %s: %w", report.ID.Hex(), err)
+		}
+	}
+
+	return nil
+}
+
+func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Context, req request.ApplyTemplateIsClassroomToReportRequest) error {
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get current user")
+	}
+
+	if currentUser.IsSuperAdmin {
+		return errors.New("super admin cannot apply template to report")
+	}
+
+	// get students by classroom id from gw
+	students, err := s.classroomGateway.GetStudentsByClassroomID(ctx, req.ClassroomID)
+	if err != nil {
+		return fmt.Errorf("failed to get students by classroom id: %w", err)
+	}
+
+	var reports []*model.Report
+
+	for _, student := range students {
+		report, _ := s.repo.GetByStudentTopicTermAndLanguage(
+			ctx,
+			student.StudentID,
+			req.TopicID,
+			req.TermID,
+			req.UniqueLangKey,
+		)
+		if report != nil {
+			reports = append(reports, report)
+		}
+	}
+
+	// tao report plan template
+	rpt := &model.ReportPlanTemplate{
+		OrganizationID: currentUser.OrganizationAdmin.ID,
+		TopicID:        req.TopicID,
+		TermID:         req.TermID,
+		Language:       req.UniqueLangKey,
+		ClassroomID:    req.ClassroomID,
+		IsSchool:       false,
+		Template: model.Template{
+			Title:          req.Title,
+			Introduction:   req.Introduction,
+			CurriculumArea: req.CurriculumArea,
+		},
+	}
+	if err := s.reportPlanTemplateRepo.CreateOrUpdate(ctx, rpt); err != nil {
+		return fmt.Errorf("failed to create report plan template: %w", err)
+	}
+	// Áp dụng template cho từng report
+	for _, report := range reports {
+		report.ReportData = toBsonM(report.ReportData)
+
+		// --- Chuẩn bị dữ liệu template ---
+		title := toBsonM(report.ReportData["title"])
+		title["content"] = req.Title
+		report.ReportData["title"] = title
+
+		intro := toBsonM(report.ReportData["introduction"])
+		intro["content"] = req.Introduction
+		report.ReportData["introduction"] = intro
+
+		cur := toBsonM(report.ReportData["curriculum_area"])
+		cur["content"] = req.CurriculumArea
+		report.ReportData["curriculum_area"] = cur
+
+		// --- Gọi repository update ---
+		if err := s.repo.ApplyTopicPlanTemplate(ctx, report); err != nil {
+			// nếu không tìm thấy report thì bỏ qua
+			if strings.Contains(err.Error(), "report not found") {
+				continue
+			}
+			return fmt.Errorf("failed to apply template to report %s: %w", report.ID.Hex(), err)
+		}
+	}
+
 	return nil
 }
 
