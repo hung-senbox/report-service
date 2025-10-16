@@ -598,15 +598,6 @@ func (s *reportService) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Contex
 		return errors.New("super admin cannot apply template to report")
 	}
 
-	// Lấy danh sách reports theo term, topic, language
-	reports, err := s.repo.GetTopicsByTermTopicLanguage(ctx, req.TermID, req.TopicID, req.UniqueLangKey)
-	if err != nil {
-		return fmt.Errorf("failed to get reports: %w", err)
-	}
-	if len(reports) == 0 {
-		return errors.New("no reports found for the given term/topic/language")
-	}
-
 	// tao report plan template
 	rpt := &model.ReportPlanTemplate{
 		OrganizationID: currentUser.OrganizationAdmin.ID,
@@ -623,6 +614,16 @@ func (s *reportService) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Contex
 	if err := s.reportPlanTemplateRepo.CreateOrUpdate(ctx, rpt); err != nil {
 		return fmt.Errorf("failed to create report plan template: %w", err)
 	}
+
+	// Lấy danh sách reports theo term, topic, language
+	reports, err := s.repo.GetTopicsByTermTopicLanguage(ctx, req.TermID, req.TopicID, req.UniqueLangKey)
+	if err != nil {
+		return fmt.Errorf("failed to get reports")
+	}
+	if len(reports) == 0 {
+		return errors.New("no reports found to apply template")
+	}
+
 	// Áp dụng template cho từng report
 	for _, report := range reports {
 		report.ReportData = toBsonM(report.ReportData)
@@ -646,7 +647,7 @@ func (s *reportService) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Contex
 			if strings.Contains(err.Error(), "report not found") {
 				continue
 			}
-			return fmt.Errorf("failed to apply template to report %s: %w", report.ID.Hex(), err)
+			return fmt.Errorf("failed to apply template to report")
 		}
 	}
 
@@ -661,27 +662,6 @@ func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Con
 
 	if currentUser.IsSuperAdmin {
 		return errors.New("super admin cannot apply template to report")
-	}
-
-	// get students by classroom id from gw
-	students, err := s.classroomGateway.GetStudentsByClassroomID(ctx, req.ClassroomID, req.TermID)
-	if err != nil {
-		return fmt.Errorf("failed to get students by classroom id: %w", err)
-	}
-
-	var reports []*model.Report
-
-	for _, student := range students {
-		report, _ := s.repo.GetByStudentTopicTermAndLanguage(
-			ctx,
-			student.StudentID,
-			req.TopicID,
-			req.TermID,
-			req.UniqueLangKey,
-		)
-		if report != nil {
-			reports = append(reports, report)
-		}
 	}
 
 	// tao report plan template
@@ -699,8 +679,33 @@ func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Con
 		},
 	}
 	if err := s.reportPlanTemplateRepo.CreateOrUpdate(ctx, rpt); err != nil {
-		return fmt.Errorf("failed to create report plan template: %w", err)
+		return fmt.Errorf("failed to create report plan template")
 	}
+
+	// get students by classroom id from gw
+	students, err := s.classroomGateway.GetStudentsByClassroomID(ctx, req.ClassroomID, req.TermID)
+	if err != nil {
+		return fmt.Errorf("failed to get students")
+	}
+	if len(students) == 0 {
+		return fmt.Errorf("students not found")
+	}
+
+	var reports []*model.Report
+
+	for _, student := range students {
+		report, _ := s.repo.GetByStudentTopicTermAndLanguage(
+			ctx,
+			student.StudentID,
+			req.TopicID,
+			req.TermID,
+			req.UniqueLangKey,
+		)
+		if report != nil {
+			reports = append(reports, report)
+		}
+	}
+
 	// Áp dụng template cho từng report
 	for _, report := range reports {
 		report.ReportData = toBsonM(report.ReportData)

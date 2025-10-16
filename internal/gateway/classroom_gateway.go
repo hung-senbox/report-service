@@ -71,7 +71,7 @@ func (g *classroomGateway) GetStudentsByClassroomID(ctx context.Context, classro
 	}
 
 	headers := helper.GetHeaders(ctx)
-	resp, err := client.Call("GET", "/api/v1/gateway/classrooms/students?classroom_id="+classroomID+"&term_id="+termID+"", nil, headers)
+	resp, err := client.Call("GET", "/api/v1/gateway/classrooms/term?classroom_id="+classroomID+"&term_id="+termID+"", nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API get teacher by user fail: %w", err)
 	}
