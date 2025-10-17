@@ -801,9 +801,9 @@ func (s *reportService) GetReportOverViewAllClassroom(
 		// 5️⃣ Thêm vào response
 		res.Reports = append(res.Reports, response.AllClassroomReport{
 			ClassName: class.ClassroomName,
-			DOB:       "",  // nếu cần: s.studentGateway.GetStudentByID()
-			Age:       0,   // có thể tính từ DOB
-			Class:     0.0, // có thể là điểm TB hoặc cấp học
+			DOB:       "EMPTY",
+			Age:       0,
+			Class:     0.0,
 			Topics:    topicsByClass,
 		})
 	}
