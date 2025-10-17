@@ -28,6 +28,7 @@ type ReportRepository interface {
 	CreateOrUpdateClassroomView4Web(ctx context.Context, report *model.Report) error
 	GetTopicsByTermTopicLanguage(ctx context.Context, termID, topicID, language string) ([]*model.Report, error)
 	ApplyTopicPlanTemplate(ctx context.Context, report *model.Report) error
+	GetByEditorIDAndStudentIDAndTermID(ctx context.Context, editorID, studentID, termID string) ([]*model.Report, error)
 }
 
 type reportRepository struct {
@@ -255,7 +256,7 @@ func (r *reportRepository) CreateOrUpdateStudentView4Web(ctx context.Context, re
 		}
 
 		for k, v := range subData {
-			if strings.HasPrefix(k, "manager_") || k == "status" {
+			if strings.HasPrefix(k, "manager_") || k == "status" || k == "color" {
 				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
 			}
 		}
@@ -373,4 +374,21 @@ func (r *reportRepository) ApplyTopicPlanTemplate(ctx context.Context, report *m
 	}
 
 	return nil
+}
+
+func (r *reportRepository) GetByEditorIDAndStudentIDAndTermID(ctx context.Context, editorID, studentID, termID string) ([]*model.Report, error) {
+	filter := bson.M{
+		"editor_id":  editorID,
+		"student_id": studentID,
+		"term_id":    termID,
+	}
+	var reports []*model.Report
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if err = cursor.All(ctx, &reports); err != nil {
+		return nil, err
+	}
+	return reports, nil
 }

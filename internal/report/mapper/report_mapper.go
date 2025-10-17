@@ -1,6 +1,8 @@
 package mapper
 
 import (
+	"encoding/json"
+	"fmt"
 	gw_response "report-service/internal/gateway/dto/response"
 	"report-service/internal/report/dto/response"
 	"report-service/internal/report/model"
@@ -130,4 +132,91 @@ func MapReportListToResDTO(reports []*model.Report) []response.ReportResponse {
 		result = append(result, MapReportToResDTO(r, nil, response.ManagerCommentPreviousTerm{}, response.TeacherReportPreviousTerm{}, ""))
 	}
 	return result
+}
+
+func MapReportToStruct(report *model.Report) (*model.Reportstruct, error) {
+	if report == nil {
+		return nil, fmt.Errorf("report is nil")
+	}
+
+	// Parse report_data (bson.M → model.ReportData)
+	var rd model.ReportData
+	dataBytes, err := json.Marshal(report.ReportData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal report.ReportData: %w", err)
+	}
+
+	if err := json.Unmarshal(dataBytes, &rd); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to model.ReportData: %w", err)
+	}
+
+	// Map sang Reportstruct
+	res := &model.Reportstruct{
+		ID:         report.ID.Hex(),
+		StudentID:  report.StudentID,
+		TopicID:    report.TopicID,
+		TermID:     report.TermID,
+		EditorID:   report.EditorID,
+		Language:   report.Language,
+		Status:     report.Status,
+		ReportData: rd,
+		CreatedAt:  report.CreatedAt,
+	}
+
+	return res, nil
+}
+
+func MapReportsToStruct(reports []*model.Report) ([]*model.Reportstruct, error) {
+	if len(reports) == 0 {
+		return nil, nil
+	}
+
+	statusMap := map[string]int{
+		"Empty":    0,
+		"Teacher":  10,
+		"Manager":  15,
+		"Done":     20,
+		"Approved": 25,
+	}
+
+	var result []*model.Reportstruct
+
+	for _, report := range reports {
+		if report == nil {
+			continue
+		}
+
+		dataBytes, err := json.Marshal(report.ReportData)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal report.ReportData: %w", err)
+		}
+
+		var rd model.ReportData
+		if err := json.Unmarshal(dataBytes, &rd); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal to model.ReportData: %w", err)
+		}
+
+		// Tính progress
+		progress := 0
+		progress += statusMap[rd.Before.Status]
+		progress += statusMap[rd.Now.Status]
+		progress += statusMap[rd.Conclusion.Status]
+
+		res := &model.Reportstruct{
+			ID:         report.ID.Hex(),
+			StudentID:  report.StudentID,
+			TopicID:    report.TopicID,
+			TermID:     report.TermID,
+			EditorID:   report.EditorID,
+			Language:   report.Language,
+			Status:     report.Status,
+			ReportData: rd,
+			CreatedAt:  report.CreatedAt,
+			Progress:   progress,
+		}
+
+		result = append(result, res)
+	}
+
+	return result, nil
 }

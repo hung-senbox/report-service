@@ -736,6 +736,77 @@ func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Con
 	return nil
 }
 
-func (s *reportService) GetReportOverView(ctx context.Context, req request.GetReportOverViewRequest) error {
-	return nil
+func (s *reportService) GetReportOverViewAllClassroom(
+	ctx context.Context,
+	req request.GetReportOverViewAllClassroomRequest,
+) (*response.GetReportOverviewAllClassroomResponse, error) {
+
+	// 1️⃣ Lấy danh sách lớp & giáo viên/học sinh
+	allClassroomAssignTemplate, err := s.classroomGateway.GetAllClassroomAssignTemplate(ctx, req.TermID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all classroom assign template: %w", err)
+	}
+
+	var res response.GetReportOverviewAllClassroomResponse
+	res.Reports = make([]response.AllClassroomReport, 0)
+
+	// Map quy đổi status → % tương ứng
+	statusValue := map[string]int{
+		"Empty":    0,
+		"Teacher":  10,
+		"Manager":  15,
+		"Done":     20,
+		"Approved": 25,
+	}
+
+	// 2️⃣ Lặp từng lớp
+	for _, class := range allClassroomAssignTemplate {
+		topicsByClass := make(map[string]response.AllClassroomTopicStatus)
+
+		// 3️⃣ Lặp từng học sinh trong lớp
+		for _, assign := range class.AssignTemplates {
+			editor, err := s.userGateway.GetUserByTeacher(ctx, assign.TeacherID)
+			if err != nil || editor == nil {
+				continue
+			}
+
+			reports, err := s.repo.GetByEditorIDAndStudentIDAndTermID(ctx, editor.ID, assign.StudentID, req.TermID)
+			if err != nil || len(reports) == 0 {
+				continue
+			}
+
+			// 4️⃣ Lặp từng report → tổng hợp theo topic
+			for _, r := range reports {
+				reportStruct, err := mapper.MapReportToStruct(r)
+				if err != nil || reportStruct == nil {
+					continue
+				}
+
+				before := statusValue[reportStruct.ReportData.Before.Status]
+				now := statusValue[reportStruct.ReportData.Now.Status]
+				conclusion := statusValue[reportStruct.ReportData.Conclusion.Status]
+
+				// Tổng progress cho topic = tổng 3 phần
+				progress := before + now + conclusion
+
+				topicsByClass[r.TopicID] = response.AllClassroomTopicStatus{
+					Before:     before,
+					Now:        now,
+					Conclusion: conclusion,
+					Progress:   progress,
+				}
+			}
+		}
+
+		// 5️⃣ Thêm vào response
+		res.Reports = append(res.Reports, response.AllClassroomReport{
+			ClassName: class.ClassroomName,
+			DOB:       "",  // nếu cần: s.studentGateway.GetStudentByID()
+			Age:       0,   // có thể tính từ DOB
+			Class:     0.0, // có thể là điểm TB hoặc cấp học
+			Topics:    topicsByClass,
+		})
+	}
+
+	return &res, nil
 }
