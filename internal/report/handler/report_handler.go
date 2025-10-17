@@ -174,3 +174,26 @@ func (h *ReportHandler) ApplyTopicPlanTemplateIsClassroom2Report(c *gin.Context)
 
 	helper.SendSuccess(c, http.StatusOK, "Report template applied successfully", nil)
 }
+
+func (h *ReportHandler) GetReportOverViewAllClassroom(c *gin.Context) {
+	termID := c.Query("term_id")
+	if termID == "" {
+		helper.SendError(c, http.StatusBadRequest, errors.New("termID is required"), helper.ErrInvalidRequest)
+		return
+	}
+
+	var req request.GetReportOverViewAllClassroomRequest
+	req.TermID = termID
+
+	reports, err := h.service.GetReportOverViewAllClassroom(c.Request.Context(), req)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			helper.SendSuccess(c, http.StatusOK, "Report not found", nil)
+			return
+		}
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", reports)
+}
