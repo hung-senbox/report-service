@@ -245,6 +245,7 @@ func (r *reportRepository) CreateOrUpdateStudentView4Web(ctx context.Context, re
 	update := bson.M{
 		"$set": bson.M{
 			"status":     report.Status,
+			"editing":    report.Editing,
 			"updated_at": time.Now(),
 		},
 	}
