@@ -757,7 +757,6 @@ func (s *reportService) GetReportOverViewAllClassroom(
 	}
 
 	for _, class := range allClassroomMockData {
-		// map tạm để gộp theo topic_id
 		topicsByClass := make(map[string]response.AllClassroomTopicStatus)
 
 		for _, assign := range class.AssignTemplates {
@@ -780,20 +779,28 @@ func (s *reportService) GetReportOverViewAllClassroom(
 				before := statusValue[strings.ToLower(reportStruct.ReportData.Before.Status)]
 				now := statusValue[strings.ToLower(reportStruct.ReportData.Now.Status)]
 				conclusion := statusValue[strings.ToLower(reportStruct.ReportData.Conclusion.Status)]
-
 				progress := before + now + conclusion
 
-				topicsByClass[r.TopicID] = response.AllClassroomTopicStatus{
-					TopicID:    r.TopicID,
-					Before:     before,
-					Now:        now,
-					Conclusion: conclusion,
-					Progress:   progress,
+				// nếu topic đã tồn tại → cộng dồn
+				if existing, ok := topicsByClass[r.TopicID]; ok {
+					existing.Before += before
+					existing.Now += now
+					existing.Conclusion += conclusion
+					existing.Progress += progress
+					topicsByClass[r.TopicID] = existing
+				} else {
+					topicsByClass[r.TopicID] = response.AllClassroomTopicStatus{
+						TopicID:    r.TopicID,
+						Before:     before,
+						Now:        now,
+						Conclusion: conclusion,
+						Progress:   progress,
+					}
 				}
 			}
 		}
 
-		// ✅ chuyển map → slice
+		// map → slice
 		topicsSlice := make([]response.AllClassroomTopicStatus, 0, len(topicsByClass))
 		for _, topic := range topicsByClass {
 			topicsSlice = append(topicsSlice, topic)
