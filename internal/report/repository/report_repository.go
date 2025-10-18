@@ -221,8 +221,10 @@ func (r *reportRepository) CreateOrUpdateStudentView4App(ctx context.Context, re
 		}
 	}
 
+	// chỉ khi insert mới set các field này
 	update["$setOnInsert"] = bson.M{
 		"created_at": time.Now(),
+		"editing":    true,
 	}
 
 	opts := options.Update().SetUpsert(true)

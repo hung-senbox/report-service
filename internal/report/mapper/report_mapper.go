@@ -109,6 +109,11 @@ func MapReportToResDTO(
 		teacherEditor = *teacher
 	}
 
+	editing := false
+	if report.Editing != nil {
+		editing = *report.Editing
+	}
+
 	return response.ReportResponse{
 		ID:                         report.ID.Hex(),
 		StudentID:                  report.StudentID,
@@ -116,7 +121,7 @@ func MapReportToResDTO(
 		TermID:                     report.TermID,
 		Language:                   report.Language,
 		Status:                     report.Status,
-		Editing:                    report.Editing,
+		Editing:                    editing,
 		ReportData:                 report.ReportData,
 		CreatedAt:                  report.CreatedAt,
 		Editor:                     teacherEditor,

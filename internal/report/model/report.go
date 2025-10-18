@@ -15,7 +15,7 @@ type Report struct {
 	TermID     string             `bson:"term_id"`
 	Language   string             `bson:"language"`
 	Status     string             `bson:"status"`
-	Editing    bool               `bson:"editing" json:"editing"`
+	Editing    *bool              `bson:"editing" json:"editing"`
 	ReportData bson.M             `bson:"report_data" json:"report_data"`
 	CreatedAt  time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at"`
