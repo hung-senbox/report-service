@@ -109,7 +109,7 @@ func MapReportToResDTO(
 		teacherEditor = *teacher
 	}
 
-	editing := false
+	editing := true
 	if report.Editing != nil {
 		editing = *report.Editing
 	}
