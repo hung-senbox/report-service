@@ -15,7 +15,7 @@ type UploadReport4AWebRequest struct {
 	TermID        string                 `json:"term_id" binding:"required"`
 	UniqueLangKey string                 `json:"unique_lang_key" binding:"required"`
 	Status        string                 `json:"status" binding:"required"`
-	Editing       bool                   `json:"editing" binding:"required"`
+	Editing       bool                   `json:"editing"`
 	ReportData    map[string]interface{} `json:"report_data" binding:"required"`
 }
 
