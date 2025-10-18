@@ -116,6 +116,7 @@ func MapReportToResDTO(
 		TermID:                     report.TermID,
 		Language:                   report.Language,
 		Status:                     report.Status,
+		Editing:                    report.Editing,
 		ReportData:                 report.ReportData,
 		CreatedAt:                  report.CreatedAt,
 		Editor:                     teacherEditor,

@@ -14,6 +14,7 @@ type ReportResponse struct {
 	Editor                     gw_response.TeacherResponse `json:"editor,omitempty"`
 	Language                   string                      `json:"language"`
 	Status                     string                      `json:"status"`
+	Editing                    bool                        `json:"editing"`
 	ReportData                 map[string]interface{}      `json:"report_data"`
 	CreatedAt                  time.Time                   `json:"created_at"`
 	ManagerCommentPreviousTerm ManagerCommentPreviousTerm  `json:"manager_comment_previous_term"`
