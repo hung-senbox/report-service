@@ -374,48 +374,6 @@ func toBsonM(v interface{}) bson.M {
 	return bson.M{}
 }
 
-// func (s *reportService) getLatestDataTermID(
-// 	ctx context.Context,
-// 	termID string,
-// 	organizationID string,
-// 	uploadReq request.UploadReport4AWebRequest,
-// ) (string, error) {
-
-// 	// Lấy danh sách các term trước đó, sắp theo thứ tự gần nhất -> xa nhất
-// 	previousTerms, err := s.termGateway.GetPreviousTerms(ctx, termID, organizationID)
-// 	if err != nil {
-// 		return "", fmt.Errorf("get previous terms failed: %w", err)
-// 	}
-
-// 	// Duyệt từng term để tìm term có teacher_report != ""
-// 	for _, term := range previousTerms {
-// 		report, err := s.repo.GetByStudentTopicTermAndLanguage(ctx,
-// 			uploadReq.StudentID, uploadReq.TopicID, term.ID, uploadReq.UniqueLangKey)
-// 		if err != nil {
-// 			continue // bỏ qua lỗi từng report, không dừng toàn bộ
-// 		}
-
-// 		if report == nil || report.ReportData == nil {
-// 			continue
-// 		}
-
-// 		reportData := toBsonM(report.ReportData)
-
-// 		// danh sách các section có thể chứa teacher_report
-// 		sections := []string{"before", "now", "note", "conclusion"}
-
-// 		for _, section := range sections {
-// 			if data, ok := reportData[section].(bson.M); ok {
-// 				if teacherReport, ok := data["teacher_report"].(string); ok && teacherReport != "" {
-// 					return term.ID, nil
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return "", nil
-// }
-
 func (s *reportService) UploadClassroomReport(ctx context.Context, req request.UploadClassroomReport4WebRequest) error {
 	report := &model.Report{
 		StudentID:  req.StudentID,
