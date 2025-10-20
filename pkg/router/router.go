@@ -26,7 +26,9 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 	historyRepo := repository.NewReportHistoryRepository(reportHistoryCollection)
 	reportPlanTemplateRepo := repository.NewReportPlanTemplateRepository(reportPlanTemplateCollection)
 
-	// reoport
+	// usecase
+
+	// report
 	reportService := service.NewReportService(userGateway, termGateway, mediaGateway, classroomGateway, reportRepo, historyRepo, reportPlanTemplateRepo)
 	reportHandler := handler.NewReportHandler(reportService)
 

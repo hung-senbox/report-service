@@ -5,6 +5,7 @@ type AllClassroomTopicStatus struct {
 	TopicTitle        string `json:"title"`
 	TopicMainImageUrl string `json:"main_image_url"`
 	Progress          int    `json:"progress"`
+	MainStatus        int    `json:"status"`
 	Before            int    `json:"before"`
 	Now               int    `json:"now"`
 	Conclusion        int    `json:"conclusion"`

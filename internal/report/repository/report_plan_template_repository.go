@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ReportPlanTemplateRepositopry interface {
+type ReportPlanTemplateRepository interface {
 	Create(ctx context.Context, rpt *model.ReportPlanTemplate) error
 	CreateOrUpdate(ctx context.Context, rpt *model.ReportPlanTemplate) error
 	GetSchoolTemplate(ctx context.Context, termID, topicID, language, organizationID string) (*model.ReportPlanTemplate, error)
@@ -22,7 +22,7 @@ type reportPlanTemplateRepository struct {
 	collection *mongo.Collection
 }
 
-func NewReportPlanTemplateRepository(collection *mongo.Collection) ReportPlanTemplateRepositopry {
+func NewReportPlanTemplateRepository(collection *mongo.Collection) ReportPlanTemplateRepository {
 	return &reportPlanTemplateRepository{collection}
 }
 

@@ -14,11 +14,11 @@ type ReportPlanTemplateService interface {
 }
 
 type reportPlanTemplateService struct {
-	repo        repository.ReportPlanTemplateRepositopry
+	repo        repository.ReportPlanTemplateRepository
 	userGateway gateway.UserGateway
 }
 
-func NewReportPlanTemplateService(repo repository.ReportPlanTemplateRepositopry, userGateway gateway.UserGateway) ReportPlanTemplateService {
+func NewReportPlanTemplateService(repo repository.ReportPlanTemplateRepository, userGateway gateway.UserGateway) ReportPlanTemplateService {
 	return &reportPlanTemplateService{
 		repo:        repo,
 		userGateway: userGateway,

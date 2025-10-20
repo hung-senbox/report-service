@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"report-service/helper"
 	"report-service/internal/gateway"
+	dto "report-service/internal/gateway/dto/response"
 	mockdata "report-service/internal/gateway/mock_data"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
@@ -41,7 +42,7 @@ type reportService struct {
 	classroomGateway       gateway.ClassroomGateway
 	repo                   repository.ReportRepository
 	historyRepo            repository.ReportHistoryRepository
-	reportPlanTemplateRepo repository.ReportPlanTemplateRepositopry
+	reportPlanTemplateRepo repository.ReportPlanTemplateRepository
 }
 
 func NewReportService(
@@ -51,7 +52,7 @@ func NewReportService(
 	classroomGateway gateway.ClassroomGateway,
 	repo repository.ReportRepository,
 	historyRepo repository.ReportHistoryRepository,
-	reportPlanTemplateRepo repository.ReportPlanTemplateRepositopry,
+	reportPlanTemplateRepo repository.ReportPlanTemplateRepository,
 ) ReportService {
 	return &reportService{
 		userGateway:            userGateway,
@@ -456,141 +457,6 @@ func (s *reportService) UploadClassroomReport(ctx context.Context, req request.U
 	return nil
 }
 
-func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error) {
-	currentUser, err := s.userGateway.GetCurrentUser(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get current user")
-	}
-
-	if currentUser == nil {
-		return nil, fmt.Errorf("current user not found")
-	}
-	res := &response.GetClassroomReportResponse4Web{}
-	var reports = make([]response.ClassroomReportResponse4Web, 0)
-
-	// Lấy template
-	reportTemplateSchool, _ := s.reportPlanTemplateRepo.GetSchoolTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, currentUser.OrganizationAdmin.ID)
-	reportTemplateClassroom, _ := s.reportPlanTemplateRepo.GetClassroomTemplate(ctx, req.TermID, req.TopicID, req.UniqueLangKey, req.ClassroomID, currentUser.OrganizationAdmin.ID)
-
-	var schoolTemplate model.Template
-	var classroomTemplate model.Template
-	if reportTemplateSchool != nil {
-		schoolTemplate = model.Template{
-			Title:          reportTemplateSchool.Template.Title,
-			Introduction:   reportTemplateSchool.Template.Introduction,
-			CurriculumArea: reportTemplateSchool.Template.CurriculumArea,
-		}
-	}
-	if reportTemplateClassroom != nil {
-		classroomTemplate = model.Template{
-			Title:          reportTemplateClassroom.Template.Title,
-			Introduction:   reportTemplateClassroom.Template.Introduction,
-			CurriculumArea: reportTemplateClassroom.Template.CurriculumArea,
-		}
-	}
-
-	res.SchoolTemplate = schoolTemplate
-	res.ClassroomTempate = classroomTemplate
-
-	// Lấy danh sách học sinh trong lớp
-	students, _ := s.classroomGateway.GetStudents4ClassroomReport(ctx, req.TermID, req.ClassroomID, req.TeacherID)
-	if len(students) == 0 {
-		return res, nil
-	}
-
-	// Lấy thông tin editor
-	editor, err := s.userGateway.GetUserByTeacher(ctx, req.TeacherID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get editor (teacher): %w", err)
-	}
-
-	// Lấy thông tin teacher
-	teacher, _ := s.userGateway.GetTeacherInfo(ctx, editor.ID, students[0].OrganizationID)
-
-	for _, std := range students {
-		report, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(
-			ctx,
-			std.StudentID,
-			req.TopicID,
-			req.TermID,
-			req.UniqueLangKey,
-			editor.ID,
-		)
-
-		var reportRes response.ReportResponse
-		if report != nil {
-			var managerCommentPreviousTerm response.ManagerCommentPreviousTerm
-			var teacherReportPrevioiusTerm response.TeacherReportPreviousTerm
-
-			previousTerm, _ := s.termGateway.GetPreviousTerm(ctx, report.TermID, std.OrganizationID)
-			if previousTerm != nil {
-				previousTermReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(
-					ctx,
-					report.StudentID,
-					report.TopicID,
-					previousTerm.ID,
-					report.Language,
-					report.EditorID,
-				)
-				if previousTermReport != nil {
-					managerCommentPreviousTerm.TermTitle = previousTerm.Title
-					teacherReportPrevioiusTerm.TermTitle = previousTerm.Title
-
-					if nowData, ok := previousTermReport.ReportData["now"].(primitive.M); ok {
-						if comment, ok := nowData["manager_comment"].(string); ok {
-							managerCommentPreviousTerm.Now = comment
-						}
-						if r, ok := nowData["teacher_report"].(string); ok {
-							teacherReportPrevioiusTerm.Now = r
-						}
-						if managerUpdatedAt, ok := nowData["manager_updated_at"].(string); ok {
-							managerCommentPreviousTerm.NowUpdatedAt = managerUpdatedAt
-						}
-						if updatedAt, ok := nowData["updated_at"].(string); ok {
-							teacherReportPrevioiusTerm.NowUpdatedAt = updatedAt
-						}
-					}
-
-					if conclusionData, ok := previousTermReport.ReportData["conclusion"].(primitive.M); ok {
-						if comment, ok := conclusionData["manager_comment"].(string); ok {
-							managerCommentPreviousTerm.Conclusion = comment
-						}
-						if r, ok := conclusionData["teacher_report"].(string); ok {
-							teacherReportPrevioiusTerm.Conclusion = r
-						}
-						if managerUpdatedAt, ok := conclusionData["manager_updated_at"].(string); ok {
-							managerCommentPreviousTerm.ConclusionUpdatedAt = managerUpdatedAt
-						}
-						if updatedAt, ok := conclusionData["updated_at"].(string); ok {
-							teacherReportPrevioiusTerm.ConclusionUpdatedAt = updatedAt
-						}
-					}
-				}
-			}
-
-			reportRes = mapper.MapReportToResDTO(
-				report,
-				teacher,
-				managerCommentPreviousTerm,
-				teacherReportPrevioiusTerm,
-				"",
-			)
-		} else {
-			reportRes = response.ReportResponse{}
-		}
-
-		reports = append(reports, response.ClassroomReportResponse4Web{
-			StudentID:   std.StudentID,
-			StudentName: std.StudentName,
-			Report:      reportRes,
-		})
-	}
-
-	res.Reports = reports
-
-	return res, nil
-}
-
 func (s *reportService) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error {
 	currentUser, err := s.userGateway.GetCurrentUser(ctx)
 	if err != nil {
@@ -739,6 +605,11 @@ func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Con
 	return nil
 }
 
+type topicAgg struct {
+	Status response.AllClassroomTopicStatus
+	Count  int
+}
+
 func (s *reportService) GetReportOverViewAllClassroom(
 	ctx context.Context,
 	req request.GetReportOverViewAllClassroomRequest,
@@ -754,11 +625,11 @@ func (s *reportService) GetReportOverViewAllClassroom(
 		"teacher":  10,
 		"manager":  15,
 		"done":     20,
-		"approved": 25,
+		"accepted": 25,
 	}
 
 	for _, class := range allClassroomMockData {
-		topicsByClass := make(map[string]response.AllClassroomTopicStatus)
+		topicsByClass := make(map[string]topicAgg)
 
 		for _, assign := range class.AssignTemplates {
 			editor, err := s.userGateway.GetUserByTeacher(ctx, assign.TeacherID)
@@ -780,22 +651,38 @@ func (s *reportService) GetReportOverViewAllClassroom(
 				before := statusValue[strings.ToLower(reportStruct.ReportData.Before.Status)]
 				now := statusValue[strings.ToLower(reportStruct.ReportData.Now.Status)]
 				conclusion := statusValue[strings.ToLower(reportStruct.ReportData.Conclusion.Status)]
-				progress := before + now + conclusion
+				mainStatus := statusValue[strings.ToLower(reportStruct.Status)]
+				progress := before + now + conclusion + mainStatus
 
-				// nếu topic đã tồn tại → cộng dồn
 				if existing, ok := topicsByClass[r.TopicID]; ok {
-					existing.Before += before
-					existing.Now += now
-					existing.Conclusion += conclusion
-					existing.Progress += progress
+					newCount := existing.Count + 1
+					existing.Status.Before = (existing.Status.Before*existing.Count + before) / newCount
+					existing.Status.Now = (existing.Status.Now*existing.Count + now) / newCount
+					existing.Status.Conclusion = (existing.Status.Conclusion*existing.Count + conclusion) / newCount
+					existing.Status.MainStatus = (existing.Status.MainStatus*existing.Count + mainStatus) / newCount
+					existing.Status.Progress = (existing.Status.Progress*existing.Count + progress) / newCount
+					existing.Count = newCount
 					topicsByClass[r.TopicID] = existing
 				} else {
-					topicsByClass[r.TopicID] = response.AllClassroomTopicStatus{
-						TopicID:    r.TopicID,
-						Before:     before,
-						Now:        now,
-						Conclusion: conclusion,
-						Progress:   progress,
+					topic, _ := s.mediaGateway.GetTopicByID(ctx, r.TopicID)
+					topicTitle := ""
+					topicMainImageUrl := ""
+					if topic != nil {
+						topicTitle = topic.Title
+						topicMainImageUrl = topic.MainImageUrl
+					}
+					topicsByClass[r.TopicID] = topicAgg{
+						Status: response.AllClassroomTopicStatus{
+							TopicID:           r.TopicID,
+							TopicTitle:        topicTitle,
+							TopicMainImageUrl: topicMainImageUrl,
+							Before:            before,
+							Now:               now,
+							Conclusion:        conclusion,
+							Progress:          progress,
+							MainStatus:        mainStatus,
+						},
+						Count: 1,
 					}
 				}
 			}
@@ -804,7 +691,7 @@ func (s *reportService) GetReportOverViewAllClassroom(
 		// map → slice
 		topicsSlice := make([]response.AllClassroomTopicStatus, 0, len(topicsByClass))
 		for _, topic := range topicsByClass {
-			topicsSlice = append(topicsSlice, topic)
+			topicsSlice = append(topicsSlice, topic.Status)
 		}
 
 		res.Reports = append(res.Reports, response.AllClassroomReport{
@@ -819,51 +706,159 @@ func (s *reportService) GetReportOverViewAllClassroom(
 	return &res, nil
 }
 
-// filterReportsWordCountMaxByTopicId giữ lại report có tổng word count lớn nhất cho mỗi topic.
-func (s *reportService) filterReportsWordCountMaxByTopicId(reports []*model.Report) []*model.Report {
-	if len(reports) == 0 {
-		return nil
+func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error) {
+
+	currentUser, err := s.userGateway.GetCurrentUser(ctx)
+	if err != nil || currentUser == nil {
+		return nil, fmt.Errorf("failed to get current user")
 	}
 
-	type topicBest struct {
-		report    *model.Report
-		wordCount int
+	res := &response.GetClassroomReportResponse4Web{}
+
+	// Load school & classroom templates.
+	res.SchoolTemplate = s.getTemplateIfExists(
+		func() (*model.ReportPlanTemplate, error) {
+			return s.reportPlanTemplateRepo.GetSchoolTemplate(ctx,
+				req.TermID, req.TopicID, req.UniqueLangKey, currentUser.OrganizationAdmin.ID)
+		})
+
+	res.ClassroomTempate = s.getTemplateIfExists(
+		func() (*model.ReportPlanTemplate, error) {
+			return s.reportPlanTemplateRepo.GetClassroomTemplate(ctx,
+				req.TermID, req.TopicID, req.UniqueLangKey, req.ClassroomID, currentUser.OrganizationAdmin.ID)
+		})
+
+	// Get students assigned to classroom
+	assigned, _ := s.classroomGateway.GetClassroomAssignedTemplate(ctx, req.TermID, req.ClassroomID)
+	if assigned == nil {
+		return res, nil
+	}
+	if len(assigned.Students) == 0 {
+		return res, nil
 	}
 
-	bestByTopic := make(map[string]topicBest)
-
-	for _, r := range reports {
-		reportStruct, err := mapper.MapReportToStruct(r)
-		if err != nil || reportStruct == nil {
-			continue
+	// Build student reports
+	for _, std := range assigned.Students {
+		report := s.getStudentReport(ctx, req, std)
+		reports := response.ClassroomReportResponse4Web{
+			Student: response.StudentReportClassroom{
+				StudentID:     std.StudentID,
+				StudentName:   std.StudentName,
+				AvatarMainUrl: std.Avatar.ImageUrl,
+			},
+			Teacher: response.TeacherReportClassroom{
+				TeacherID:     report.Editor.ID,
+				TeacherName:   report.Editor.Name,
+				AvatarMainUrl: report.Editor.Avatar.ImageUrl,
+			},
+			Report: report,
 		}
+		res.Reports = append(res.Reports, reports)
+	}
 
-		// Tính tổng số từ của các section chính
-		totalWords := countWords(reportStruct.ReportData.Before.Content) +
-			countWords(reportStruct.ReportData.Now.Content) +
-			countWords(reportStruct.ReportData.Conclusion.Content)
+	return res, nil
+}
 
-		// Nếu topic này chưa có hoặc có report với word count lớn hơn → cập nhật
-		if cur, ok := bestByTopic[r.TopicID]; !ok || totalWords > cur.wordCount {
-			bestByTopic[r.TopicID] = topicBest{
-				report:    r,
-				wordCount: totalWords,
+func (s *reportService) getTemplateIfExists(getter func() (*model.ReportPlanTemplate, error)) model.Template {
+	t, err := getter()
+	if err != nil || t == nil {
+		return model.Template{}
+	}
+	return model.Template{
+		Title:          t.Template.Title,
+		Introduction:   t.Template.Introduction,
+		CurriculumArea: t.Template.CurriculumArea,
+	}
+}
+
+func (s *reportService) getStudentReport(ctx context.Context, req request.GetClassroomReportRequest4Web, std dto.StudentTemplate) response.ReportResponse {
+
+	report, _ := s.repo.GetByStudentTopicTermAndLanguage(
+		ctx,
+		std.StudentID,
+		req.TopicID,
+		req.TermID,
+		req.UniqueLangKey,
+	)
+
+	if report == nil {
+		return response.ReportResponse{}
+	}
+
+	managerPrev, teacherPrev := s.getPreviousTermReports(ctx, report, std.OrganizationID)
+
+	// get teacher info
+	techerInfo, _ := s.userGateway.GetTeacherInfo(ctx, report.EditorID, std.OrganizationID)
+
+	return mapper.MapReportToResDTO(
+		report,
+		techerInfo,
+		managerPrev,
+		teacherPrev,
+		"",
+	)
+}
+
+func (s *reportService) getPreviousTermReports(ctx context.Context, currentReport *model.Report, orgID string) (response.ManagerCommentPreviousTerm, response.TeacherReportPreviousTerm) {
+
+	var mgr response.ManagerCommentPreviousTerm
+	var tch response.TeacherReportPreviousTerm
+
+	prevTerm, _ := s.termGateway.GetPreviousTerm(ctx, currentReport.TermID, orgID)
+	if prevTerm == nil {
+		return mgr, tch
+	}
+
+	prevReport, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(
+		ctx,
+		currentReport.StudentID,
+		currentReport.TopicID,
+		prevTerm.ID,
+		currentReport.Language,
+		currentReport.EditorID,
+	)
+	if prevReport == nil {
+		return mgr, tch
+	}
+
+	mgr.TermTitle = prevTerm.Title
+	tch.TermTitle = prevTerm.Title
+
+	parseTermData := func(section string, dstMgr *response.ManagerCommentPreviousTerm, dstTch *response.TeacherReportPreviousTerm) {
+		if data, ok := prevReport.ReportData[section].(primitive.M); ok {
+			if v, ok := data["manager_comment"].(string); ok {
+				if section == "now" {
+					dstMgr.Now = v
+				} else {
+					dstMgr.Conclusion = v
+				}
+			}
+			if v, ok := data["teacher_report"].(string); ok {
+				if section == "now" {
+					dstTch.Now = v
+				} else {
+					dstTch.Conclusion = v
+				}
+			}
+			if v, ok := data["manager_updated_at"].(string); ok {
+				if section == "now" {
+					dstMgr.NowUpdatedAt = v
+				} else {
+					dstMgr.ConclusionUpdatedAt = v
+				}
+			}
+			if v, ok := data["updated_at"].(string); ok {
+				if section == "now" {
+					dstTch.NowUpdatedAt = v
+				} else {
+					dstTch.ConclusionUpdatedAt = v
+				}
 			}
 		}
 	}
 
-	// Gom kết quả thành slice
-	result := make([]*model.Report, 0, len(bestByTopic))
-	for _, v := range bestByTopic {
-		result = append(result, v.report)
-	}
-	return result
-}
+	parseTermData("now", &mgr, &tch)
+	parseTermData("conclusion", &mgr, &tch)
 
-// countWords đếm số từ trong chuỗi (dựa vào khoảng trắng).
-func countWords(s string) int {
-	if len(strings.TrimSpace(s)) == 0 {
-		return 0
-	}
-	return len(strings.Fields(s))
+	return mgr, tch
 }
