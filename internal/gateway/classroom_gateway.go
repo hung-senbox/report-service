@@ -135,7 +135,7 @@ func (g *classroomGateway) GetClassroomAssignedTemplate(ctx context.Context, ter
 	}
 
 	headers := helper.GetHeaders(ctx)
-	resp, err := client.Call("GET", "/api/v1/gateway/classrooms/?term_id="+termId+"&classroom_id="+classroomID+"", nil, headers)
+	resp, err := client.Call("GET", "/api/v1/gateway/classrooms/template/?term_id="+termId+"&classroom_id="+classroomID+"", nil, headers)
 	if err != nil {
 		return nil, fmt.Errorf("call API get assigned template fail: %w", err)
 	}

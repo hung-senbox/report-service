@@ -427,7 +427,12 @@ func (s *reportService) UploadClassroomReport(ctx context.Context, req request.U
 	}
 
 	// check report da duoc tao tu app chua ?
-	reportExist, _ := s.repo.GetByStudentTopicTermAndLanguage(ctx, req.StudentID, req.TopicID, req.TermID, req.UniqueLangKey)
+	// get editor from teacher id
+	user, _ := s.userGateway.GetUserByTeacher(ctx, req.TeacherID)
+	if user == nil {
+		return errors.New("upload report failed, teacher not found")
+	}
+	reportExist, _ := s.repo.GetByStudentTopicTermLanguageAndEditor(ctx, req.StudentID, req.TopicID, req.TermID, req.UniqueLangKey, user.ID)
 	if reportExist == nil {
 		return errors.New("report not found, need to create report from teacher")
 	}
