@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"report-service/helper"
 	"report-service/internal/gateway"
+	mockdata "report-service/internal/gateway/mock_data"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
 	"report-service/internal/report/mapper"
@@ -30,6 +31,7 @@ type ReportService interface {
 	GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error)
 	ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error
 	ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Context, req request.ApplyTemplateIsClassroomToReportRequest) error
+	GetReportOverViewAllClassroom(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse, error)
 }
 
 type reportService struct {
@@ -742,29 +744,22 @@ func (s *reportService) GetReportOverViewAllClassroom(
 	req request.GetReportOverViewAllClassroomRequest,
 ) (*response.GetReportOverviewAllClassroomResponse, error) {
 
-	// 1️⃣ Lấy danh sách lớp & giáo viên/học sinh
-	allClassroomAssignTemplate, err := s.classroomGateway.GetAllClassroomAssignTemplate(ctx, req.TermID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get all classroom assign template: %w", err)
-	}
-
 	var res response.GetReportOverviewAllClassroomResponse
 	res.Reports = make([]response.AllClassroomReport, 0)
 
-	// Map quy đổi status → % tương ứng
+	allClassroomMockData := mockdata.FakeAllClassroomAssignTemplate()
+
 	statusValue := map[string]int{
-		"Empty":    0,
-		"Teacher":  10,
-		"Manager":  15,
-		"Done":     20,
-		"Approved": 25,
+		"empty":    0,
+		"teacher":  10,
+		"manager":  15,
+		"done":     20,
+		"approved": 25,
 	}
 
-	// 2️⃣ Lặp từng lớp
-	for _, class := range allClassroomAssignTemplate {
+	for _, class := range allClassroomMockData {
 		topicsByClass := make(map[string]response.AllClassroomTopicStatus)
 
-		// 3️⃣ Lặp từng học sinh trong lớp
 		for _, assign := range class.AssignTemplates {
 			editor, err := s.userGateway.GetUserByTeacher(ctx, assign.TeacherID)
 			if err != nil || editor == nil {
@@ -776,38 +771,99 @@ func (s *reportService) GetReportOverViewAllClassroom(
 				continue
 			}
 
-			// 4️⃣ Lặp từng report → tổng hợp theo topic
 			for _, r := range reports {
 				reportStruct, err := mapper.MapReportToStruct(r)
 				if err != nil || reportStruct == nil {
 					continue
 				}
 
-				before := statusValue[reportStruct.ReportData.Before.Status]
-				now := statusValue[reportStruct.ReportData.Now.Status]
-				conclusion := statusValue[reportStruct.ReportData.Conclusion.Status]
-
-				// Tổng progress cho topic = tổng 3 phần
+				before := statusValue[strings.ToLower(reportStruct.ReportData.Before.Status)]
+				now := statusValue[strings.ToLower(reportStruct.ReportData.Now.Status)]
+				conclusion := statusValue[strings.ToLower(reportStruct.ReportData.Conclusion.Status)]
 				progress := before + now + conclusion
 
-				topicsByClass[r.TopicID] = response.AllClassroomTopicStatus{
-					Before:     before,
-					Now:        now,
-					Conclusion: conclusion,
-					Progress:   progress,
+				// nếu topic đã tồn tại → cộng dồn
+				if existing, ok := topicsByClass[r.TopicID]; ok {
+					existing.Before += before
+					existing.Now += now
+					existing.Conclusion += conclusion
+					existing.Progress += progress
+					topicsByClass[r.TopicID] = existing
+				} else {
+					topicsByClass[r.TopicID] = response.AllClassroomTopicStatus{
+						TopicID:    r.TopicID,
+						Before:     before,
+						Now:        now,
+						Conclusion: conclusion,
+						Progress:   progress,
+					}
 				}
 			}
 		}
 
-		// 5️⃣ Thêm vào response
+		// map → slice
+		topicsSlice := make([]response.AllClassroomTopicStatus, 0, len(topicsByClass))
+		for _, topic := range topicsByClass {
+			topicsSlice = append(topicsSlice, topic)
+		}
+
 		res.Reports = append(res.Reports, response.AllClassroomReport{
 			ClassName: class.ClassroomName,
-			DOB:       "",  // nếu cần: s.studentGateway.GetStudentByID()
-			Age:       0,   // có thể tính từ DOB
-			Class:     0.0, // có thể là điểm TB hoặc cấp học
-			Topics:    topicsByClass,
+			DOB:       "EMPTY",
+			Age:       0,
+			Class:     0.0,
+			Topics:    topicsSlice,
 		})
 	}
 
 	return &res, nil
+}
+
+// filterReportsWordCountMaxByTopicId giữ lại report có tổng word count lớn nhất cho mỗi topic.
+func (s *reportService) filterReportsWordCountMaxByTopicId(reports []*model.Report) []*model.Report {
+	if len(reports) == 0 {
+		return nil
+	}
+
+	type topicBest struct {
+		report    *model.Report
+		wordCount int
+	}
+
+	bestByTopic := make(map[string]topicBest)
+
+	for _, r := range reports {
+		reportStruct, err := mapper.MapReportToStruct(r)
+		if err != nil || reportStruct == nil {
+			continue
+		}
+
+		// Tính tổng số từ của các section chính
+		totalWords := countWords(reportStruct.ReportData.Before.Content) +
+			countWords(reportStruct.ReportData.Now.Content) +
+			countWords(reportStruct.ReportData.Conclusion.Content)
+
+		// Nếu topic này chưa có hoặc có report với word count lớn hơn → cập nhật
+		if cur, ok := bestByTopic[r.TopicID]; !ok || totalWords > cur.wordCount {
+			bestByTopic[r.TopicID] = topicBest{
+				report:    r,
+				wordCount: totalWords,
+			}
+		}
+	}
+
+	// Gom kết quả thành slice
+	result := make([]*model.Report, 0, len(bestByTopic))
+	for _, v := range bestByTopic {
+		result = append(result, v.report)
+	}
+	return result
+}
+
+// countWords đếm số từ trong chuỗi (dựa vào khoảng trắng).
+func countWords(s string) int {
+	if len(strings.TrimSpace(s)) == 0 {
+		return 0
+	}
+	return len(strings.Fields(s))
 }
