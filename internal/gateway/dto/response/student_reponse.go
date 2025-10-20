@@ -29,5 +29,5 @@ type TeacherTemplate struct {
 	TeacherID      string `json:"user_id"`
 	TeacherName    string `json:"user_name"`
 	OrganizationID string `json:"organization_id"`
-	Avatar         string `json:"avatar"`
+	Avatar         Avatar `json:"avatar"`
 }
