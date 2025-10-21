@@ -57,15 +57,15 @@ type GetClassroomReportResponse4Web struct {
 }
 
 type StudentReportClassroom struct {
-	StudentID      string `json:"user_id"`
-	StudentName    string `json:"user_name"`
+	StudentID      string `json:"id"`
+	StudentName    string `json:"name"`
 	OrganizationID string `json:"organization_id"`
 	AvatarMainUrl  string `json:"avatar_main_url"`
 }
 
 type TeacherReportClassroom struct {
-	TeacherID      string `json:"user_id"`
-	TeacherName    string `json:"user_name"`
+	TeacherID      string `json:"id"`
+	TeacherName    string `json:"name"`
 	OrganizationID string `json:"organization_id"`
 	AvatarMainUrl  string `json:"avatar_main_url"`
 }

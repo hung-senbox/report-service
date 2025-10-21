@@ -703,20 +703,22 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 	// Build student reports
 	for _, std := range assigned.Students {
 		report := s.getStudentReport(ctx, req, std)
-		reports := response.ClassroomReportResponse4Web{
-			Student: response.StudentReportClassroom{
-				StudentID:     std.StudentID,
-				StudentName:   std.StudentName,
-				AvatarMainUrl: std.Avatar.ImageUrl,
-			},
-			Teacher: response.TeacherReportClassroom{
-				TeacherID:     report.Editor.ID,
-				TeacherName:   report.Editor.Name,
-				AvatarMainUrl: report.Editor.Avatar.ImageUrl,
-			},
-			Report: report,
+		if report.ID != "" {
+			reports := response.ClassroomReportResponse4Web{
+				Student: response.StudentReportClassroom{
+					StudentID:     std.StudentID,
+					StudentName:   std.StudentName,
+					AvatarMainUrl: std.Avatar.ImageUrl,
+				},
+				Teacher: response.TeacherReportClassroom{
+					TeacherID:     report.Editor.ID,
+					TeacherName:   report.Editor.Name,
+					AvatarMainUrl: report.Editor.Avatar.ImageUrl,
+				},
+				Report: report,
+			}
+			res.Reports = append(res.Reports, reports)
 		}
-		res.Reports = append(res.Reports, reports)
 	}
 
 	return res, nil
