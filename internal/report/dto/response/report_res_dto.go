@@ -52,6 +52,7 @@ type ClassroomReportResponse4Web struct {
 
 type GetClassroomReportResponse4Web struct {
 	Reports          []ClassroomReportResponse4Web `json:"reports"`
+	MainPercentage   float32                       `json:"main_percentage"`
 	SchoolTemplate   model.Template                `json:"school_template"`
 	ClassroomTempate model.Template                `json:"classroom_template"`
 }
@@ -68,4 +69,12 @@ type TeacherReportClassroom struct {
 	TeacherName    string `json:"name"`
 	OrganizationID string `json:"organization_id"`
 	AvatarMainUrl  string `json:"avatar_main_url"`
+}
+
+type ReportSummary struct {
+	MainPercentage float32 `json:"main_percentage"`
+	Status         float32 `json:"status"`
+	Before         float32 `json:"before"`
+	Now            float32 `json:"now"`
+	Conclusion     float32 `json:"conclusion"`
 }

@@ -573,23 +573,12 @@ type topicAgg struct {
 	Count  int
 }
 
-func (s *reportService) GetReportOverViewAllClassroom(
-	ctx context.Context,
-	req request.GetReportOverViewAllClassroomRequest,
-) (*response.GetReportOverviewAllClassroomResponse, error) {
+func (s *reportService) GetReportOverViewAllClassroom(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse, error) {
 
 	var res response.GetReportOverviewAllClassroomResponse
 	res.Reports = make([]response.AllClassroomReport, 0)
 
 	allClassroomMockData := mockdata.FakeAllClassroomAssignTemplate()
-
-	statusValue := map[string]int{
-		"empty":    0,
-		"teacher":  10,
-		"manager":  15,
-		"done":     20,
-		"accepted": 25,
-	}
 
 	for _, class := range allClassroomMockData {
 		topicsByClass := make(map[string]topicAgg)
@@ -605,48 +594,26 @@ func (s *reportService) GetReportOverViewAllClassroom(
 				continue
 			}
 
-			for _, r := range reports {
-				reportStruct, err := mapper.MapReportToStruct(r)
-				if err != nil || reportStruct == nil {
-					continue
-				}
+			// Gọi hàm phụ để xử lý gom dữ liệu
+			classTopics, err := s.aggregateTopicsByClassroom(ctx, reports)
+			if err != nil {
+				continue
+			}
 
-				before := statusValue[strings.ToLower(reportStruct.ReportData.Before.Status)]
-				now := statusValue[strings.ToLower(reportStruct.ReportData.Now.Status)]
-				conclusion := statusValue[strings.ToLower(reportStruct.ReportData.Conclusion.Status)]
-				mainStatus := statusValue[strings.ToLower(reportStruct.Status)]
-				progress := before + now + conclusion + mainStatus
-
-				if existing, ok := topicsByClass[r.TopicID]; ok {
-					newCount := existing.Count + 1
-					existing.Status.Before = (existing.Status.Before*existing.Count + before) / newCount
-					existing.Status.Now = (existing.Status.Now*existing.Count + now) / newCount
-					existing.Status.Conclusion = (existing.Status.Conclusion*existing.Count + conclusion) / newCount
-					existing.Status.MainStatus = (existing.Status.MainStatus*existing.Count + mainStatus) / newCount
-					existing.Status.Progress = (existing.Status.Progress*existing.Count + progress) / newCount
+			// Gộp kết quả vào topicsByClass tổng
+			for topicID, agg := range classTopics {
+				if existing, ok := topicsByClass[topicID]; ok {
+					// Gộp dữ liệu trung bình giữa các nhóm
+					newCount := existing.Count + agg.Count
+					existing.Status.Before = (existing.Status.Before*float32(existing.Count) + agg.Status.Before*float32(agg.Count)) / float32(newCount)
+					existing.Status.Now = (existing.Status.Now*float32(existing.Count) + agg.Status.Now*float32(agg.Count)) / float32(newCount)
+					existing.Status.Conclusion = (existing.Status.Conclusion*float32(existing.Count) + agg.Status.Conclusion*float32(agg.Count)) / float32(newCount)
+					existing.Status.MainStatus = (existing.Status.MainStatus*float32(existing.Count) + agg.Status.MainStatus*float32(agg.Count)) / float32(newCount)
+					existing.Status.MainPercentage = (existing.Status.MainPercentage*float32(existing.Count) + agg.Status.MainPercentage*float32(agg.Count)) / float32(newCount)
 					existing.Count = newCount
-					topicsByClass[r.TopicID] = existing
+					topicsByClass[topicID] = existing
 				} else {
-					topic, _ := s.mediaGateway.GetTopicByID(ctx, r.TopicID)
-					topicTitle := ""
-					topicMainImageUrl := ""
-					if topic != nil {
-						topicTitle = topic.Title
-						topicMainImageUrl = topic.MainImageUrl
-					}
-					topicsByClass[r.TopicID] = topicAgg{
-						Status: response.AllClassroomTopicStatus{
-							TopicID:           r.TopicID,
-							TopicTitle:        topicTitle,
-							TopicMainImageUrl: topicMainImageUrl,
-							Before:            before,
-							Now:               now,
-							Conclusion:        conclusion,
-							Progress:          progress,
-							MainStatus:        mainStatus,
-						},
-						Count: 1,
-					}
+					topicsByClass[topicID] = agg
 				}
 			}
 		}
@@ -667,6 +634,109 @@ func (s *reportService) GetReportOverViewAllClassroom(
 	}
 
 	return &res, nil
+}
+
+func (s *reportService) aggregateTopicsByClassroom(ctx context.Context, reports []*model.Report) (map[string]topicAgg, error) {
+
+	topicsByClass := make(map[string]topicAgg)
+
+	for _, r := range reports {
+		reportStruct, err := mapper.MapReportToStruct(r)
+		if err != nil || reportStruct == nil {
+			continue
+		}
+
+		before := constants.MapStatusValue(reportStruct.ReportData.Before.Status)
+		now := constants.MapStatusValue(reportStruct.ReportData.Now.Status)
+		conclusion := constants.MapStatusValue(reportStruct.ReportData.Conclusion.Status)
+		mainStatus := constants.MapStatusValue(reportStruct.Status)
+		mainPercentage := before + now + conclusion + mainStatus
+
+		if existing, ok := topicsByClass[r.TopicID]; ok {
+			newCount := existing.Count + 1
+
+			existing.Status.Before = (existing.Status.Before*float32(existing.Count) + before) / float32(newCount)
+			existing.Status.Now = (existing.Status.Now*float32(existing.Count) + now) / float32(newCount)
+			existing.Status.Conclusion = (existing.Status.Conclusion*float32(existing.Count) + conclusion) / float32(newCount)
+			existing.Status.MainStatus = (existing.Status.MainStatus*float32(existing.Count) + mainStatus) / float32(newCount)
+			existing.Status.MainPercentage = (existing.Status.MainPercentage*float32(existing.Count) + mainPercentage) / float32(newCount)
+
+			existing.Count = newCount
+			topicsByClass[r.TopicID] = existing
+
+		} else {
+			topic, _ := s.mediaGateway.GetTopicByID(ctx, r.TopicID)
+			topicTitle := ""
+			topicMainImageUrl := ""
+
+			if topic != nil {
+				topicTitle = topic.Title
+				topicMainImageUrl = topic.MainImageUrl
+			}
+
+			topicsByClass[r.TopicID] = topicAgg{
+				Status: response.AllClassroomTopicStatus{
+					TopicID:           r.TopicID,
+					TopicTitle:        topicTitle,
+					TopicMainImageUrl: topicMainImageUrl,
+					Before:            before,
+					Now:               now,
+					Conclusion:        conclusion,
+					MainPercentage:    mainPercentage,
+					MainStatus:        mainStatus,
+				},
+				Count: 1,
+			}
+		}
+	}
+
+	return topicsByClass, nil
+}
+
+func aggregateReportsSummary(reports []response.ReportResponse) response.ReportSummary {
+	var total float32
+	var beforeSum, nowSum, conclusionSum float32
+
+	for _, r := range reports {
+		rd := r.ReportData
+		if rd == nil {
+			continue
+		}
+
+		beforeData := toBsonM(rd["before"])
+		nowData := toBsonM(rd["now"])
+		conclusionData := toBsonM(rd["conclusion"])
+
+		if status, ok := beforeData["status"].(string); ok {
+			beforeSum += constants.MapStatusValue(status)
+		}
+		if status, ok := nowData["status"].(string); ok {
+			nowSum += constants.MapStatusValue(status)
+		}
+		if status, ok := conclusionData["status"].(string); ok {
+			conclusionSum += constants.MapStatusValue(status)
+		}
+
+		total++
+	}
+
+	if total == 0 {
+		return response.ReportSummary{}
+	}
+
+	beforeAvg := beforeSum / total
+	nowAvg := nowSum / total
+	conclusionAvg := conclusionSum / total
+
+	mainPercentage := beforeAvg + nowAvg + conclusionAvg
+
+	return response.ReportSummary{
+		MainPercentage: mainPercentage,
+		Status:         mainPercentage,
+		Before:         beforeAvg,
+		Now:            nowAvg,
+		Conclusion:     conclusionAvg,
+	}
 }
 
 func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error) {
@@ -720,6 +790,15 @@ func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request
 			res.Reports = append(res.Reports, reports)
 		}
 	}
+
+	// tinh main percentage
+	var reportList []response.ReportResponse
+	for _, r := range res.Reports {
+		reportList = append(reportList, r.Report)
+	}
+
+	summary := aggregateReportsSummary(reportList)
+	res.MainPercentage = summary.MainPercentage
 
 	return res, nil
 }

@@ -1,5 +1,7 @@
 package constants
 
+import "strings"
+
 const (
 	GrpcPort                   = "GRPC_PORT"
 	HttpPort                   = "HTTP_PORT"
@@ -143,3 +145,27 @@ const (
 	ReportHistoryTypeWebStudentView   ReportHistoryRole = "web_student_view"
 	ReportHistoryTypeWebClassroomView ReportHistoryRole = "web_classroom_view"
 )
+
+const (
+	StatusEmpty    = 0
+	StatusTeacher  = 10
+	StatusManager  = 15
+	StatusDone     = 20
+	StatusAccepted = 25
+)
+
+// MapStatusValue convert text status → numeric value
+func MapStatusValue(status string) float32 {
+	switch strings.ToLower(status) {
+	case "teacher":
+		return StatusTeacher
+	case "manager":
+		return StatusManager
+	case "done":
+		return StatusDone
+	case "accepted":
+		return StatusAccepted
+	default:
+		return StatusEmpty
+	}
+}
