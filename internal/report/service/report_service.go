@@ -514,18 +514,18 @@ func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Con
 		return fmt.Errorf("failed to create report plan template")
 	}
 
-	// get students by classroom id from gw
-	students, err := s.classroomGateway.GetStudentsByClassroomID(ctx, req.ClassroomID, req.TermID)
-	if err != nil {
-		return fmt.Errorf("failed to get students")
+	// Get students assigned to classroom
+	assigned, _ := s.classroomGateway.GetClassroomAssignedTemplate(ctx, req.TermID, req.ClassroomID)
+	if assigned == nil {
+		return errors.New("assignment template not found")
 	}
-	if len(students) == 0 {
-		return fmt.Errorf("students not found")
+	if len(assigned.Students) == 0 {
+		return errors.New("students assignment template not found")
 	}
 
 	var reports []*model.Report
 
-	for _, student := range students {
+	for _, student := range assigned.Students {
 		report, _ := s.repo.GetByStudentTopicTermAndLanguage(
 			ctx,
 			student.StudentID,
