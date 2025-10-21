@@ -672,23 +672,30 @@ func (u *reportWebUsecase) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.
 	}
 
 	// Get students assigned to classroom
-	assigned, _ := u.classroomGw.GetClassroomAssignedTemplate(ctx, req.TermID, req.ClassroomID)
+	assigned, _ := u.classroomGw.GetClassroomAssignTemplate(ctx, req.TermID, req.ClassroomID)
 	if assigned == nil {
 		return errors.New("assignment template not found")
 	}
-	if len(assigned.Students) == 0 {
-		return errors.New("students assignment template not found")
+	if len(assigned.AssignTemplates) == 0 {
+		return errors.New("assigned template not found")
 	}
 
 	var reports []*model.Report
 
-	for _, student := range assigned.Students {
-		report, _ := u.reportRepo.GetByStudentTopicTermAndLanguage(
+	for _, assigned := range assigned.AssignTemplates {
+		// get editor form teacher id
+		editor, _ := u.userGw.GetUserByTeacher(ctx, assigned.TeacherID)
+		if editor == nil {
+			return errors.New("get editor failed")
+		}
+
+		report, _ := u.reportRepo.GetByStudentTopicTermLanguageAndEditor(
 			ctx,
-			student.StudentID,
+			assigned.StudentID,
 			req.TopicID,
 			req.TermID,
 			req.UniqueLangKey,
+			editor.ID,
 		)
 		if report != nil {
 			reports = append(reports, report)

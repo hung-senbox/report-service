@@ -1,6 +1,6 @@
 package dto
 
-type GetAllClassroomAssignTemplate struct {
+type GetClassroomAssignTemplate struct {
 	ClassroomID      string           `json:"classroom_id"`
 	ClassroomName    string           `json:"classroom_name"`
 	ClassroomIconUrl string           `json:"classroom_icon_url"`

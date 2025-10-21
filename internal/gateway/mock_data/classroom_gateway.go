@@ -2,8 +2,8 @@ package mockdata
 
 import dto "report-service/internal/gateway/dto/response"
 
-func FakeAllClassroomAssignTemplate() []dto.GetAllClassroomAssignTemplate {
-	return []dto.GetAllClassroomAssignTemplate{
+func FakeAllClassroomAssignTemplate() []dto.GetClassroomAssignTemplate {
+	return []dto.GetClassroomAssignTemplate{
 		{
 			ClassroomID:      "class_1",
 			ClassroomName:    "Class A1",
