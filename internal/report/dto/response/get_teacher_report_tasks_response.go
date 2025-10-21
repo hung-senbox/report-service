@@ -2,7 +2,7 @@ package response
 
 import "report-service/pkg/constants"
 
-type GetTeacherReportTasksResponse struct {
+type GetTeacherReportTasksResponse4App struct {
 	Term        string                      `json:"term"`
 	Topic       string                      `json:"topic"`
 	StudentName string                      `json:"student_name"`

@@ -34,16 +34,6 @@ func (h *ReportHandler) UploadReport4App(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusOK, "Report uploaded successfully", nil)
 }
 
-func (h *ReportHandler) GetAllReports(c *gin.Context) {
-	reports, err := h.service.GetAll(c.Request.Context())
-	if err != nil {
-		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
-		return
-	}
-
-	helper.SendSuccess(c, http.StatusOK, "Reports retrieved successfully", reports)
-}
-
 func (h *ReportHandler) GetReport4App(c *gin.Context) {
 	var req request.GetReportRequest4App
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -84,9 +74,9 @@ func (h *ReportHandler) GetReport4Web(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", report)
 }
 
-func (h *ReportHandler) GetTeacherReportTasks(c *gin.Context) {
+func (h *ReportHandler) GetTeacherReportTasks4App(c *gin.Context) {
 
-	reports, err := h.service.GetTeacherReportTasks(c.Request.Context())
+	reports, err := h.service.GetTeacherReportTasks4App(c.Request.Context())
 	if err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
 		return
@@ -110,14 +100,14 @@ func (h *ReportHandler) UploadReport4Web(c *gin.Context) {
 	helper.SendSuccess(c, http.StatusOK, "Report uploaded successfully", nil)
 }
 
-func (h *ReportHandler) UploadClassroomReport(c *gin.Context) {
+func (h *ReportHandler) UploadClassroomReport4Web(c *gin.Context) {
 	var req request.UploadClassroomReport4WebRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		helper.SendError(c, http.StatusBadRequest, err, helper.ErrInvalidRequest)
 		return
 	}
 
-	if err := h.service.UploadClassroomReport(c.Request.Context(), req); err != nil {
+	if err := h.service.UploadClassroomReport4Web(c.Request.Context(), req); err != nil {
 		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInvalidOperation)
 		return
 	}
@@ -175,7 +165,7 @@ func (h *ReportHandler) ApplyTopicPlanTemplateIsClassroom2Report(c *gin.Context)
 	helper.SendSuccess(c, http.StatusOK, "Report template applied successfully", nil)
 }
 
-func (h *ReportHandler) GetReportOverViewAllClassroom(c *gin.Context) {
+func (h *ReportHandler) GetReportOverViewAllClassroom4Web(c *gin.Context) {
 	termID := c.Query("term_id")
 	if termID == "" {
 		helper.SendError(c, http.StatusBadRequest, errors.New("termID is required"), helper.ErrInvalidRequest)
@@ -185,7 +175,7 @@ func (h *ReportHandler) GetReportOverViewAllClassroom(c *gin.Context) {
 	var req request.GetReportOverViewAllClassroomRequest
 	req.TermID = termID
 
-	reports, err := h.service.GetReportOverViewAllClassroom(c.Request.Context(), req)
+	reports, err := h.service.GetReportOverViewAllClassroom4Web(c.Request.Context(), req)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			helper.SendSuccess(c, http.StatusOK, "Report not found", nil)

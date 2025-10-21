@@ -16,7 +16,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 		{
 			reportsAdmin.POST("", h.UploadReport4Web)
 			reportsAdmin.POST("/get-report", h.GetReport4Web)
-			reportsAdmin.GET("/overview", h.GetReportOverViewAllClassroom)
+			reportsAdmin.GET("/overview", h.GetReportOverViewAllClassroom4Web)
 
 			// report history
 			reportsAdmin.GET("/histories", rh.GetByEditor4App)
@@ -25,7 +25,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 			reportsClassroomAdmin := reportsAdmin.Group("/classrooms")
 			{
 				reportsClassroomAdmin.POST("/plan-templates", rph.UploadReportPlanTemplate)
-				reportsClassroomAdmin.POST("", h.UploadClassroomReport)
+				reportsClassroomAdmin.POST("", h.UploadClassroomReport4Web)
 				reportsClassroomAdmin.POST("/get-report", h.GetClassroomReports4Web)
 				reportsClassroomAdmin.POST("/templates/school/apply", h.ApplyTopicPlanTemplateIsSchool2Report)
 				reportsClassroomAdmin.POST("/templates/classroom/apply", h.ApplyTopicPlanTemplateIsClassroom2Report)
@@ -41,7 +41,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 		{
 			reportsUser.POST("", h.UploadReport4App)
 			reportsUser.POST("/get-report", h.GetReport4App)
-			reportsUser.GET("/tasks", h.GetTeacherReportTasks)
+			reportsUser.GET("/tasks", h.GetTeacherReportTasks4App)
 			reportsUser.GET("/histories", rh.GetByEditor4App)
 		}
 	}

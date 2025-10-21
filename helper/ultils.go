@@ -5,6 +5,8 @@ import (
 	"report-service/pkg/constants"
 	"strconv"
 	"strings"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func ParseAppLanguage(header string, defaultVal uint) uint {
@@ -30,4 +32,14 @@ func GetUserID(ctx context.Context) string {
 		return userID
 	}
 	return ""
+}
+
+func ToBsonM(v interface{}) bson.M {
+	if m, ok := v.(bson.M); ok {
+		return m
+	}
+	if m, ok := v.(map[string]interface{}); ok {
+		return bson.M(m)
+	}
+	return bson.M{}
 }

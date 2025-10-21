@@ -6,6 +6,7 @@ import (
 	"report-service/internal/report/repository"
 	"report-service/internal/report/route"
 	"report-service/internal/report/service"
+	"report-service/internal/report/usecase"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/consul/api"
@@ -26,10 +27,10 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 	historyRepo := repository.NewReportHistoryRepository(reportHistoryCollection)
 	reportPlanTemplateRepo := repository.NewReportPlanTemplateRepository(reportPlanTemplateCollection)
 
-	// usecase
-
 	// report
-	reportService := service.NewReportService(userGateway, termGateway, mediaGateway, classroomGateway, reportRepo, historyRepo, reportPlanTemplateRepo)
+	reportAppUseCase := usecase.NewReportAppUseCase(reportRepo, historyRepo, userGateway, classroomGateway, termGateway, mediaGateway)
+	reportWebUseCase := usecase.NewReportWebUsecase(reportRepo, historyRepo, reportPlanTemplateRepo, userGateway, classroomGateway, termGateway, mediaGateway)
+	reportService := service.NewReportService(reportAppUseCase, reportWebUseCase)
 	reportHandler := handler.NewReportHandler(reportService)
 
 	// report history

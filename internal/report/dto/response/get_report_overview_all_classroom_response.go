@@ -19,6 +19,6 @@ type AllClassroomReport struct {
 	Topics    []AllClassroomTopicStatus `json:"topics"`
 }
 
-type GetReportOverviewAllClassroomResponse struct {
+type GetReportOverviewAllClassroomResponse4Web struct {
 	Reports []AllClassroomReport `json:"reports"`
 }
