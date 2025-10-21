@@ -26,6 +26,7 @@ type ReportWebUseCase interface {
 	UploadClassroomReport4Web(ctx context.Context, req request.UploadClassroomReport4WebRequest) error
 	GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error)
 	GetReportOverViewAllClassroom4Web(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error)
+	GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error)
 	ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error
 	ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Context, req request.ApplyTemplateIsClassroomToReportRequest) error
 }
@@ -396,6 +397,8 @@ func (u *reportWebUsecase) getPreviousTermReports(ctx context.Context, currentRe
 	return mgr, tch
 }
 
+// ===================================================== GetClassroomReports4Web =====================================================//
+
 func aggregateReportsSummary(reports []response.ReportResponse) response.ReportSummary {
 	var total float32
 	var beforeSum, nowSum, conclusionSum float32
@@ -566,6 +569,12 @@ func (u *reportWebUsecase) aggregateTopicsByClassroom(ctx context.Context, repor
 	}
 
 	return topicsByClass, nil
+}
+
+// ===================================================== GetReportOverViewAllClassroom4Web =====================================================//
+
+func (u *reportWebUsecase) GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error) {
+	return nil, nil
 }
 
 func (u *reportWebUsecase) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error {
