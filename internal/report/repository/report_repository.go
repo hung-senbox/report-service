@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"report-service/helper"
 	"report-service/internal/report/model"
 	"strings"
 	"time"
@@ -355,10 +356,7 @@ func (r *reportRepository) ApplyTopicPlanTemplate(ctx context.Context, report *m
 	}
 
 	for _, section := range []string{"title", "introduction", "curriculum_area"} {
-		subData, ok := report.ReportData[section].(map[string]interface{})
-		if !ok {
-			continue
-		}
+		subData := helper.ToBsonM(report.ReportData[section])
 		for k, v := range subData {
 			update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
 		}
