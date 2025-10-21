@@ -7,7 +7,6 @@ type ApplyTemplateIsSchoolToReportRequest struct {
 	Title          string `json:"title" binding:"required"`
 	Introduction   string `json:"introduction" binding:"required"`
 	CurriculumArea string `json:"curriculum_area" binding:"required"`
-	IsChool        *bool  `json:"is_school" binding:"required"`
 }
 
 type ApplyTemplateIsClassroomToReportRequest struct {
@@ -18,5 +17,4 @@ type ApplyTemplateIsClassroomToReportRequest struct {
 	Title          string `json:"title" binding:"required"`
 	Introduction   string `json:"introduction" binding:"required"`
 	CurriculumArea string `json:"curriculum_area" binding:"required"`
-	IsChool        *bool  `json:"is_school" binding:"required"`
 }
