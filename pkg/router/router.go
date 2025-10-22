@@ -21,6 +21,7 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 	termGateway := gateway.NewTermGateway("term-service", consulClient)
 	mediaGateway := gateway.NewMediaGateway("media-service", consulClient)
 	classroomGateway := gateway.NewClassroomGateway("classroom-service", consulClient)
+	fileGateway := gateway.NewFileGateway("go-main-service", consulClient)
 
 	// Setup dependency injection
 	reportRepo := repository.NewReportRepository(reportCollection)
@@ -29,7 +30,7 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 
 	// report
 	reportAppUseCase := usecase.NewReportAppUseCase(reportRepo, historyRepo, userGateway, classroomGateway, termGateway, mediaGateway)
-	reportWebUseCase := usecase.NewReportWebUsecase(reportRepo, historyRepo, reportPlanTemplateRepo, userGateway, classroomGateway, termGateway, mediaGateway)
+	reportWebUseCase := usecase.NewReportWebUsecase(reportRepo, historyRepo, reportPlanTemplateRepo, userGateway, classroomGateway, termGateway, mediaGateway, fileGateway)
 	reportService := service.NewReportService(reportAppUseCase, reportWebUseCase)
 	reportHandler := handler.NewReportHandler(reportService)
 
