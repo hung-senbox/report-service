@@ -18,6 +18,7 @@ type ReportService interface {
 	ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error
 	ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Context, req request.ApplyTemplateIsClassroomToReportRequest) error
 	GetReportOverViewAllClassroom4Web(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error)
+	GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewByClassroomResponse4Web, error)
 }
 
 type reportService struct {
@@ -69,6 +70,10 @@ func (s *reportService) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Con
 
 func (s *reportService) GetReportOverViewAllClassroom4Web(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error) {
 	return s.webUsecase.GetReportOverViewAllClassroom4Web(ctx, req)
+}
+
+func (s *reportService) GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewByClassroomResponse4Web, error) {
+	return s.webUsecase.GetReportOverViewByClassroom4Web(ctx, req)
 }
 
 func (s *reportService) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error) {

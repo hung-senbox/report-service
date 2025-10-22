@@ -11,7 +11,7 @@ type AllClassroomTopicStatus struct {
 	Conclusion        float32 `json:"conclusion"`
 }
 
-type Classes struct {
+type ClassOverview struct {
 	ClassName               string                    `json:"class_name"`
 	DOB                     string                    `json:"dob"`
 	Age                     int                       `json:"age"`
@@ -21,13 +21,6 @@ type Classes struct {
 }
 
 type GetReportOverviewAllClassroomResponse4Web struct {
-	OverallClassesPercentage float32   `json:"overall_classes_percentage"`
-	Classes                  []Classes `json:"classes"`
-}
-
-type GetReportOverviewClassroom struct {
-}
-
-type Classroom struct {
-	ClassName string `json:"class_name"`
+	OverallClassesPercentage float32         `json:"overall_classes_percentage"`
+	Classes                  []ClassOverview `json:"classes"`
 }

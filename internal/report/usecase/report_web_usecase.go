@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"report-service/helper"
 	"report-service/internal/gateway"
+	gw_request "report-service/internal/gateway/dto/request"
 	dto "report-service/internal/gateway/dto/response"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
@@ -25,7 +26,7 @@ type ReportWebUseCase interface {
 	UploadClassroomReport4Web(ctx context.Context, req request.UploadClassroomReport4WebRequest) error
 	GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error)
 	GetReportOverViewAllClassroom4Web(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error)
-	GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error)
+	GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewByClassroomResponse4Web, error)
 	ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error
 	ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Context, req request.ApplyTemplateIsClassroomToReportRequest) error
 }
@@ -38,6 +39,7 @@ type reportWebUsecase struct {
 	classroomGw            gateway.ClassroomGateway
 	termGw                 gateway.TermGateway
 	mediaGw                gateway.MediaGateway
+	fileGw                 gateway.FileGateway
 }
 
 func NewReportWebUsecase(
@@ -48,6 +50,7 @@ func NewReportWebUsecase(
 	classroomGw gateway.ClassroomGateway,
 	termGw gateway.TermGateway,
 	mediaGw gateway.MediaGateway,
+	fileGw gateway.FileGateway,
 ) ReportWebUseCase {
 	return &reportWebUsecase{
 		reportRepo:             reportRepo,
@@ -57,6 +60,7 @@ func NewReportWebUsecase(
 		classroomGw:            classroomGw,
 		termGw:                 termGw,
 		mediaGw:                mediaGw,
+		fileGw:                 fileGw,
 	}
 }
 
@@ -453,7 +457,7 @@ type topicAgg struct {
 func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error) {
 
 	var res response.GetReportOverviewAllClassroomResponse4Web
-	res.Classes = make([]response.Classes, 0)
+	res.Classes = make([]response.ClassOverview, 0)
 
 	allClassroomAssignmentTemplate, _ := u.classroomGw.GetAllClassroomAssignTemplate(ctx, req.TermID)
 
@@ -501,7 +505,7 @@ func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context
 			topicsSlice = append(topicsSlice, topic.Status)
 		}
 
-		res.Classes = append(res.Classes, response.Classes{
+		res.Classes = append(res.Classes, response.ClassOverview{
 			ClassName: class.ClassroomName,
 			DOB:       "EMPTY",
 			Age:       0,
@@ -577,7 +581,7 @@ func (u *reportWebUsecase) aggregateTopicsByClassroom(ctx context.Context, repor
 	return topicsByClass, nil
 }
 
-func (u *reportWebUsecase) calculateAverageOverview(classroomRps []response.Classes) float32 {
+func (u *reportWebUsecase) calculateAverageOverview(classroomRps []response.ClassOverview) float32 {
 	var averageOverview float32
 	for i := range classroomRps {
 		averageOverview += classroomRps[i].AverageTopicsPercentage
@@ -585,7 +589,7 @@ func (u *reportWebUsecase) calculateAverageOverview(classroomRps []response.Clas
 	return averageOverview
 }
 
-func (u *reportWebUsecase) calculateAverageTopics(classroomRps []response.Classes) float32 {
+func (u *reportWebUsecase) calculateAverageTopics(classroomRps []response.ClassOverview) float32 {
 	var averageTopics float32
 	for i := range classroomRps {
 		for j := range classroomRps[i].Topics {
@@ -596,11 +600,27 @@ func (u *reportWebUsecase) calculateAverageTopics(classroomRps []response.Classe
 	return averageTopics
 }
 
-// ===================================================== GetReportOverViewAllClassroom4Web =====================================================//
+// ===================================================== GetReportOverViewByClassroom4Web =====================================================//
 
-func (u *reportWebUsecase) GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error) {
+func (u *reportWebUsecase) GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewByClassroomResponse4Web, error) {
+	var res *response.GetReportOverviewByClassroomResponse4Web
+	classroomAssignmentTemplate, _ := u.classroomGw.GetClassroomAssignTemplate(ctx, req.TermID, req.ClassroomID)
+	if classroomAssignmentTemplate == nil {
+		return res, nil
+	}
+	// get class icon url
+	classIconUrl, _ := u.fileGw.GetImageUrl(ctx, gw_request.GetFileUrlRequest{
+		Key:  classroomAssignmentTemplate.ClassroomIcon,
+		Mode: "private",
+	})
+	res.ClassInfo = response.ClassInfo{
+		ClassName:    classroomAssignmentTemplate.ClassroomName,
+		ClassIconUrl: *classIconUrl,
+	}
 	return nil, nil
 }
+
+// ===================================================== GetReportOverViewByClassroom4Web =====================================================//
 
 func (u *reportWebUsecase) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error {
 	currentUser, err := u.userGw.GetCurrentUser(ctx)

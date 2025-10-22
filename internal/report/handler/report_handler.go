@@ -187,3 +187,32 @@ func (h *ReportHandler) GetReportOverViewAllClassroom4Web(c *gin.Context) {
 
 	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", reports)
 }
+
+func (h *ReportHandler) GetReportOverViewByClassroom4Web(c *gin.Context) {
+	termID := c.Query("term_id")
+	if termID == "" {
+		helper.SendError(c, http.StatusBadRequest, errors.New("termID is required"), helper.ErrInvalidRequest)
+		return
+	}
+	classroomID := c.Query("classroom_id")
+	if classroomID == "" {
+		helper.SendError(c, http.StatusBadRequest, errors.New("classroomID is required"), helper.ErrInvalidRequest)
+		return
+	}
+
+	var req request.GetReportOverViewByClassroomRequest
+	req.TermID = termID
+	req.ClassroomID = classroomID
+
+	reports, err := h.service.GetReportOverViewByClassroom4Web(c.Request.Context(), req)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			helper.SendSuccess(c, http.StatusOK, "Report not found", nil)
+			return
+		}
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", reports)
+}
