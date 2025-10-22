@@ -12,13 +12,15 @@ type AllClassroomTopicStatus struct {
 }
 
 type AllClassroomReport struct {
-	ClassName string                    `json:"class_name"`
-	DOB       string                    `json:"dob"`
-	Age       int                       `json:"age"`
-	Class     float64                   `json:"class"`
-	Topics    []AllClassroomTopicStatus `json:"topics"`
+	ClassName     string                    `json:"class_name"`
+	DOB           string                    `json:"dob"`
+	Age           int                       `json:"age"`
+	Class         float32                   `json:"class"`
+	AverageTopics float32                   `json:"average_topics"`
+	Topics        []AllClassroomTopicStatus `json:"topics"`
 }
 
 type GetReportOverviewAllClassroomResponse4Web struct {
-	Reports []AllClassroomReport `json:"reports"`
+	AverageOverview float32              `json:"average_overview"`
+	Overview        []AllClassroomReport `json:"overview"`
 }

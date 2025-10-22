@@ -7,7 +7,6 @@ import (
 	"report-service/helper"
 	"report-service/internal/gateway"
 	dto "report-service/internal/gateway/dto/response"
-	mockdata "report-service/internal/gateway/mock_data"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
 	"report-service/internal/report/mapper"
@@ -454,11 +453,11 @@ type topicAgg struct {
 func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error) {
 
 	var res response.GetReportOverviewAllClassroomResponse4Web
-	res.Reports = make([]response.AllClassroomReport, 0)
+	res.Overview = make([]response.AllClassroomReport, 0)
 
-	allClassroomMockData := mockdata.FakeAllClassroomAssignTemplate()
+	allClassroomAssignmentTemplate, _ := u.classroomGw.GetAllClassroomAssignTemplate(ctx, req.TermID)
 
-	for _, class := range allClassroomMockData {
+	for _, class := range allClassroomAssignmentTemplate {
 		topicsByClass := make(map[string]topicAgg)
 
 		for _, assign := range class.AssignTemplates {
@@ -502,13 +501,20 @@ func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context
 			topicsSlice = append(topicsSlice, topic.Status)
 		}
 
-		res.Reports = append(res.Reports, response.AllClassroomReport{
+		res.Overview = append(res.Overview, response.AllClassroomReport{
 			ClassName: class.ClassroomName,
 			DOB:       "EMPTY",
 			Age:       0,
 			Class:     0.0,
 			Topics:    topicsSlice,
 		})
+	}
+	if len(res.Overview) > 0 {
+		// tinh average topics
+		for i := range res.Overview {
+			res.Overview[i].AverageTopics = u.calculateAverageTopics(res.Overview)
+		}
+		res.AverageOverview = u.calculateAverageOverview(res.Overview)
 	}
 
 	return &res, nil
@@ -569,6 +575,25 @@ func (u *reportWebUsecase) aggregateTopicsByClassroom(ctx context.Context, repor
 	}
 
 	return topicsByClass, nil
+}
+
+func (u *reportWebUsecase) calculateAverageOverview(classroomRps []response.AllClassroomReport) float32 {
+	var averageOverview float32
+	for i := range classroomRps {
+		averageOverview += classroomRps[i].AverageTopics
+	}
+	return averageOverview
+}
+
+func (u *reportWebUsecase) calculateAverageTopics(classroomRps []response.AllClassroomReport) float32 {
+	var averageTopics float32
+	for i := range classroomRps {
+		for j := range classroomRps[i].Topics {
+			averageTopics += classroomRps[i].Topics[j].MainPercentage
+		}
+	}
+
+	return averageTopics
 }
 
 // ===================================================== GetReportOverViewAllClassroom4Web =====================================================//
