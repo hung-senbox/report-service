@@ -453,7 +453,7 @@ type topicAgg struct {
 func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context, req request.GetReportOverViewAllClassroomRequest) (*response.GetReportOverviewAllClassroomResponse4Web, error) {
 
 	var res response.GetReportOverviewAllClassroomResponse4Web
-	res.Overview = make([]response.AllClassroomReport, 0)
+	res.Classes = make([]response.Classes, 0)
 
 	allClassroomAssignmentTemplate, _ := u.classroomGw.GetAllClassroomAssignTemplate(ctx, req.TermID)
 
@@ -501,7 +501,7 @@ func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context
 			topicsSlice = append(topicsSlice, topic.Status)
 		}
 
-		res.Overview = append(res.Overview, response.AllClassroomReport{
+		res.Classes = append(res.Classes, response.Classes{
 			ClassName: class.ClassroomName,
 			DOB:       "EMPTY",
 			Age:       0,
@@ -509,12 +509,12 @@ func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context
 			Topics:    topicsSlice,
 		})
 	}
-	if len(res.Overview) > 0 {
+	if len(res.Classes) > 0 {
 		// tinh average topics
-		for i := range res.Overview {
-			res.Overview[i].AverageTopics = u.calculateAverageTopics(res.Overview)
+		for i := range res.Classes {
+			res.Classes[i].AverageTopicsPercentage = u.calculateAverageTopics(res.Classes)
 		}
-		res.AverageOverview = u.calculateAverageOverview(res.Overview)
+		res.OverallClassesPercentage = u.calculateAverageOverview(res.Classes)
 	}
 
 	return &res, nil
@@ -577,15 +577,15 @@ func (u *reportWebUsecase) aggregateTopicsByClassroom(ctx context.Context, repor
 	return topicsByClass, nil
 }
 
-func (u *reportWebUsecase) calculateAverageOverview(classroomRps []response.AllClassroomReport) float32 {
+func (u *reportWebUsecase) calculateAverageOverview(classroomRps []response.Classes) float32 {
 	var averageOverview float32
 	for i := range classroomRps {
-		averageOverview += classroomRps[i].AverageTopics
+		averageOverview += classroomRps[i].AverageTopicsPercentage
 	}
 	return averageOverview
 }
 
-func (u *reportWebUsecase) calculateAverageTopics(classroomRps []response.AllClassroomReport) float32 {
+func (u *reportWebUsecase) calculateAverageTopics(classroomRps []response.Classes) float32 {
 	var averageTopics float32
 	for i := range classroomRps {
 		for j := range classroomRps[i].Topics {
