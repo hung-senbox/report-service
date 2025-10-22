@@ -88,7 +88,7 @@ func (r *reportPlanTemplateRepository) GetSchoolTemplate(ctx context.Context, te
 	return reportTemplate, err
 }
 
-func (r *reportPlanTemplateRepository) GetClassroomTemplate(ctx context.Context, termID, topicID, language, organizationID, classroomID string) (*model.ReportPlanTemplate, error) {
+func (r *reportPlanTemplateRepository) GetClassroomTemplate(ctx context.Context, termID, topicID, language, classroomID, organizationID string) (*model.ReportPlanTemplate, error) {
 	filter := bson.M{
 		"term_id":         termID,
 		"topic_id":        topicID,
