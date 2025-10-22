@@ -58,6 +58,7 @@ func (r *reportPlanTemplateRepository) CreateOrUpdate(ctx context.Context, rpt *
 			"term_id":         rpt.TermID,
 			"language":        rpt.Language,
 			"is_school":       rpt.IsSchool,
+			"classroom_id":    rpt.ClassroomID,
 			"updated_at":      rpt.UpdatedAt,
 		},
 		"$setOnInsert": bson.M{
