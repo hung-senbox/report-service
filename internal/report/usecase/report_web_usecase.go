@@ -255,33 +255,39 @@ func (u *reportWebUsecase) GetClassroomReports4Web(ctx context.Context, req requ
 		})
 
 	// Get students assigned to classroom
-	assigned, _ := u.classroomGw.GetClassroomAssignedTemplate(ctx, req.TermID, req.ClassroomID)
+	//assigned, _ := u.classroomGw.GetClassroomAssignedTemplate(ctx, req.TermID, req.ClassroomID)
+	assigned, _ := u.classroomGw.GetClassroomAssignTemplate(ctx, req.TermID, req.ClassroomID)
 	if assigned == nil {
 		return res, nil
 	}
-	if len(assigned.Students) == 0 {
+	if len(assigned.AssignTemplates) == 0 {
 		return res, nil
 	}
 
 	// Build student reports
-	for _, std := range assigned.Students {
-		report := u.getStudentReport(ctx, req, std)
-		if report.ID != "" {
-			reports := response.ClassroomReportResponse4Web{
-				Student: response.StudentReportClassroom{
-					StudentID:     std.StudentID,
-					StudentName:   std.StudentName,
-					AvatarMainUrl: std.Avatar.ImageUrl,
-				},
-				Teacher: response.TeacherReportClassroom{
-					TeacherID:     report.Editor.ID,
-					TeacherName:   report.Editor.Name,
-					AvatarMainUrl: report.Editor.Avatar.ImageUrl,
-				},
-				Report: report,
-			}
-			res.Reports = append(res.Reports, reports)
+	for _, std := range assigned.AssignTemplates {
+		// get student, teacher info
+		student, _ := u.userGw.GetStudentInfo(ctx, std.StudentID)
+		teacher, _ := u.userGw.GetTeacherById(ctx, std.TeacherID)
+		if student == nil || teacher == nil {
+			continue
 		}
+
+		report := u.getStudentReport(ctx, req, student, teacher)
+		reports := response.ClassroomReportResponse4Web{
+			Student: response.StudentReportClassroom{
+				StudentID:     std.StudentID,
+				StudentName:   student.Name,
+				AvatarMainUrl: student.Avatar.ImageUrl,
+			},
+			Teacher: response.TeacherReportClassroom{
+				TeacherID:     teacher.ID,
+				TeacherName:   teacher.Name,
+				AvatarMainUrl: teacher.Avatar.ImageUrl,
+			},
+			Report: report,
+		}
+		res.Reports = append(res.Reports, reports)
 	}
 
 	// tinh main percentage
@@ -308,28 +314,31 @@ func (u *reportWebUsecase) getTemplateIfExists(getter func() (*model.ReportPlanT
 	}
 }
 
-func (u *reportWebUsecase) getStudentReport(ctx context.Context, req request.GetClassroomReportRequest4Web, std dto.StudentTemplate) response.ReportResponse {
+func (u *reportWebUsecase) getStudentReport(ctx context.Context, req request.GetClassroomReportRequest4Web, student *dto.StudentResponse, teacher *dto.TeacherResponse) response.ReportResponse {
 
-	report, _ := u.reportRepo.GetByStudentTopicTermAndLanguage(
+	// get editor info
+	editor, _ := u.userGw.GetUserByTeacher(ctx, teacher.ID)
+	if editor == nil {
+		return response.ReportResponse{}
+	}
+	report, _ := u.reportRepo.GetByStudentTopicTermLanguageAndEditor(
 		ctx,
-		std.StudentID,
+		student.ID,
 		req.TopicID,
 		req.TermID,
 		req.UniqueLangKey,
+		editor.ID,
 	)
 
 	if report == nil {
 		return response.ReportResponse{}
 	}
 
-	managerPrev, teacherPrev := u.getPreviousTermReports(ctx, report, std.OrganizationID)
-
-	// get teacher info
-	techerInfo, _ := u.userGw.GetTeacherInfo(ctx, report.EditorID, std.OrganizationID)
+	managerPrev, teacherPrev := u.getPreviousTermReports(ctx, report, teacher.OrganizationID)
 
 	return mapper.MapReportToResDTO(
 		report,
-		techerInfo,
+		teacher,
 		managerPrev,
 		teacherPrev,
 		"",
