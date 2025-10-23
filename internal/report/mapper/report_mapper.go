@@ -242,3 +242,22 @@ func MapReportsToStruct(reports []*model.Report) ([]*model.Reportstruct, error) 
 
 	return result, nil
 }
+
+func MapReport2Print(report *model.Report) *response.GetReport2Print {
+	reportData := helper.ToBsonM(report.ReportData)
+
+	getContent := func(section string) string {
+		if sec, ok := reportData[section].(bson.M); ok {
+			if content, ok := sec["teacher_report"].(string); ok {
+				return content
+			}
+		}
+		return ""
+	}
+
+	return &response.GetReport2Print{
+		Before:     getContent("before"),
+		Now:        getContent("now"),
+		Conclusion: getContent("conclusion"),
+	}
+}
