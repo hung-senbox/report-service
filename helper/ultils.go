@@ -43,3 +43,10 @@ func ToBsonM(v interface{}) bson.M {
 	}
 	return bson.M{}
 }
+
+func SafeString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}

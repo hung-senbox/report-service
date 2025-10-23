@@ -29,6 +29,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 				reportsClassroomAdmin.POST("/get-report", h.GetClassroomReports4Web)
 				reportsClassroomAdmin.POST("/templates/school/apply", h.ApplyTopicPlanTemplateIsSchool2Report)
 				reportsClassroomAdmin.POST("/templates/classroom/apply", h.ApplyTopicPlanTemplateIsClassroom2Report)
+				reportsClassroomAdmin.GET("/overview", h.GetReportOverViewByClassroom4Web)
 			}
 		}
 	}

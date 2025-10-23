@@ -622,21 +622,126 @@ func (u *reportWebUsecase) calculateOverallAverage(total float32, count int) flo
 // ===================================================== GetReportOverViewByClassroom4Web =====================================================//
 
 func (u *reportWebUsecase) GetReportOverViewByClassroom4Web(ctx context.Context, req request.GetReportOverViewByClassroomRequest) (*response.GetReportOverviewByClassroomResponse4Web, error) {
-	var res *response.GetReportOverviewByClassroomResponse4Web
-	classroomAssignmentTemplate, _ := u.classroomGw.GetClassroomAssignTemplate(ctx, req.TermID, req.ClassroomID)
-	if classroomAssignmentTemplate == nil {
-		return res, nil
+	var res response.GetReportOverviewByClassroomResponse4Web
+
+	// Lấy thông tin lớp
+	classroomAssignmentTemplate, err := u.classroomGw.GetClassroomAssignTemplate(ctx, req.TermID, req.ClassroomID)
+	if err != nil || classroomAssignmentTemplate == nil {
+		return nil, fmt.Errorf("cannot get classroom template: %v", err)
 	}
-	// get class icon url
+
+	// Lấy icon lớp
 	classIconUrl, _ := u.fileGw.GetImageUrl(ctx, gw_request.GetFileUrlRequest{
 		Key:  classroomAssignmentTemplate.ClassroomIcon,
 		Mode: "private",
 	})
+
+	// Hardcode leader tạm (sau có thể sửa từ DB)
+	classLeader := response.ClassLeader{
+		ID:     "",
+		Name:   "Leader Name",
+		Avatar: "",
+	}
+
 	res.ClassInfo = response.ClassInfo{
 		ClassName:    classroomAssignmentTemplate.ClassroomName,
-		ClassIconUrl: *classIconUrl,
+		ClassIconUrl: helper.SafeString(classIconUrl),
+		DOB:          "EMPTY",
+		Age:          "EMPTY",
+		Class:        "EMPTY",
+		Leader:       classLeader,
 	}
-	return res, nil
+
+	// Duyệt qua từng học sinh trong lớp → gom dữ liệu từng cặp (student-teacher)
+	res.ClassOverview = make([]response.ClassOverviewByClassroom, 0)
+	topicsAgg := make(map[string]topicAgg)
+
+	for _, assign := range classroomAssignmentTemplate.AssignTemplates {
+		// Lấy thông tin giáo viên user info cua giao vien va teacher info
+		editor, err := u.userGw.GetUserByTeacher(ctx, assign.TeacherID)
+		if err != nil || editor == nil {
+			continue
+		}
+
+		// Lấy thông tin học sinh
+		student, err := u.userGw.GetStudentInfo(ctx, assign.StudentID)
+		if err != nil || student == nil {
+			continue
+		}
+
+		teacher, err := u.userGw.GetTeacherInfo(ctx, editor.ID, student.OrganizationID)
+		if err != nil || teacher == nil {
+			continue
+		}
+
+		// Lấy báo cáo
+		reports, err := u.reportRepo.GetByEditorIDAndStudentIDAndTermID(ctx, editor.ID, student.ID, req.TermID)
+		if err != nil || len(reports) == 0 {
+			continue
+		}
+
+		// Gom theo topic
+		classTopics, err := u.aggregateTopicsByClassroom(ctx, reports)
+		if err != nil {
+			continue
+		}
+
+		// Gộp tổng topic của lớp
+		for topicID, agg := range classTopics {
+			if existing, ok := topicsAgg[topicID]; ok {
+				newCount := existing.Count + agg.Count
+				existing.Status.Before = (existing.Status.Before*float32(existing.Count) + agg.Status.Before*float32(agg.Count)) / float32(newCount)
+				existing.Status.Now = (existing.Status.Now*float32(existing.Count) + agg.Status.Now*float32(agg.Count)) / float32(newCount)
+				existing.Status.Conclusion = (existing.Status.Conclusion*float32(existing.Count) + agg.Status.Conclusion*float32(agg.Count)) / float32(newCount)
+				existing.Status.MainStatus = (existing.Status.MainStatus*float32(existing.Count) + agg.Status.MainStatus*float32(agg.Count)) / float32(newCount)
+				existing.Status.MainPercentage = (existing.Status.MainPercentage*float32(existing.Count) + agg.Status.MainPercentage*float32(agg.Count)) / float32(newCount)
+				existing.Count = newCount
+				topicsAgg[topicID] = existing
+			} else {
+				topicsAgg[topicID] = agg
+			}
+		}
+
+		// Tạo overview cho từng học sinh
+		topicsSlice := make([]response.AllClassroomTopicStatus, 0, len(classTopics))
+		for _, t := range classTopics {
+			topicsSlice = append(topicsSlice, t.Status)
+		}
+
+		studentOverview := response.ClassOverviewByClassroom{
+			Teacher: response.ClassTeacher{
+				ID:     teacher.ID,
+				Name:   teacher.Name,
+				Avatar: teacher.Avatar.ImageUrl,
+			},
+			Student: response.ClassStudent{
+				ID:     student.ID,
+				Name:   student.Name,
+				Avatar: student.Avatar.ImageUrl,
+			},
+			AverageTopicsPercentage: u.calculateAverageTopicsOfClass(topicsSlice),
+			Topics:                  topicsSlice,
+		}
+
+		res.ClassOverview = append(res.ClassOverview, studentOverview)
+	}
+
+	// Tính tổng trung bình toàn lớp
+	if len(res.ClassOverview) > 0 {
+		var total float32
+		var count int
+		for _, c := range res.ClassOverview {
+			if len(c.Topics) > 0 {
+				total += c.AverageTopicsPercentage
+				count++
+			}
+		}
+		if count > 0 {
+			res.OverallClassPercentage = total / float32(count)
+		}
+	}
+
+	return &res, nil
 }
 
 // ===================================================== GetReportOverViewByClassroom4Web =====================================================//

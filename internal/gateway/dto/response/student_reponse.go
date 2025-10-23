@@ -4,6 +4,7 @@ type StudentResponse struct {
 	ID             string `json:"id"`
 	OrganizationID string `json:"organization_id"`
 	Name           string `json:"name"`
+	Avatar         Avatar `json:"avatar"`
 }
 
 type Student4ClassroomReport struct {
