@@ -79,7 +79,12 @@ func GetLatestTimeStr(updatedAt, managerUpdatedAt string) string {
 		return ""
 	}
 
-	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+	// Luôn fallback nếu server không có timezone "Asia/Ho_Chi_Minh"
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err != nil {
+		// fallback sang UTC+7 thủ công
+		loc = time.FixedZone("ICT", 7*60*60)
+	}
 
 	var latest time.Time
 	if t1.After(t2) {
@@ -88,6 +93,5 @@ func GetLatestTimeStr(updatedAt, managerUpdatedAt string) string {
 		latest = t2
 	}
 
-	// Format về dạng: "YYYY-MM-DD HH:mm:ss"
 	return latest.In(loc).Format("2006-01-02 15:04:05")
 }
