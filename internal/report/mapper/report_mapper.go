@@ -3,6 +3,7 @@ package mapper
 import (
 	"encoding/json"
 	"fmt"
+	"report-service/helper"
 	gw_response "report-service/internal/gateway/dto/response"
 	"report-service/internal/report/dto/response"
 	"report-service/internal/report/model"
@@ -112,6 +113,21 @@ func MapReportToResDTO(
 	editing := true
 	if report.Editing != nil {
 		editing = *report.Editing
+	}
+
+	// --- Thêm latest_update_time cho từng section ---
+	sections := []string{"now", "before", "conclusion", "note"}
+
+	for _, section := range sections {
+		if sectionData, ok := report.ReportData[section].(bson.M); ok {
+			updatedAt, _ := sectionData["updated_at"].(string)
+			managerUpdatedAt, _ := sectionData["manager_updated_at"].(string)
+
+			latestTimeStr := helper.GetLatestTimeStr(updatedAt, managerUpdatedAt)
+			sectionData["latest_update_time"] = latestTimeStr
+
+			report.ReportData[section] = sectionData
+		}
 	}
 
 	return response.ReportResponse{

@@ -5,6 +5,7 @@ import (
 	"report-service/pkg/constants"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -49,4 +50,44 @@ func SafeString(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+func GetLatestTimeStr(updatedAt, managerUpdatedAt string) string {
+	if updatedAt == "" && managerUpdatedAt == "" {
+		return ""
+	}
+
+	layouts := []string{
+		"2006-01-02T15:04:05.000Z07:00",
+		"2006-01-02T15:04:05.000000",
+		"2006-01-02T15:04:05.000",
+	}
+
+	parseTime := func(s string) time.Time {
+		for _, layout := range layouts {
+			if t, err := time.Parse(layout, s); err == nil {
+				return t
+			}
+		}
+		return time.Time{}
+	}
+
+	t1 := parseTime(updatedAt)
+	t2 := parseTime(managerUpdatedAt)
+
+	if t1.IsZero() && t2.IsZero() {
+		return ""
+	}
+
+	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+
+	var latest time.Time
+	if t1.After(t2) {
+		latest = t1
+	} else {
+		latest = t2
+	}
+
+	// Format về dạng: "YYYY-MM-DD HH:mm:ss"
+	return latest.In(loc).Format("2006-01-02 15:04:05")
 }
