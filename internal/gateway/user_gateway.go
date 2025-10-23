@@ -18,7 +18,6 @@ type User struct {
 }
 
 type UserGateway interface {
-	GetAuthorInfo(ctx context.Context, userID string) (*User, error)
 	GetCurrentUser(ctx context.Context) (*gw_response.CurrentUser, error)
 	GetUserInfo(ctx context.Context, userID string) (*gw_response.UserInfo, error)
 	GetStudentInfo(ctx context.Context, studentID string) (*gw_response.StudentResponse, error)
@@ -38,32 +37,6 @@ func NewUserGateway(serviceName string, consulClient *api.Client) UserGateway {
 		serviceName: serviceName,
 		consul:      consulClient,
 	}
-}
-
-// GetAuthorInfo lấy thông tin user từ service user
-func (g *userGatewayImpl) GetAuthorInfo(ctx context.Context, userID string) (*User, error) {
-	token, ok := ctx.Value("token").(string) // hoặc dùng constants.TokenKey
-	if !ok || token == "" {
-		return nil, fmt.Errorf("token not exist context")
-	}
-
-	client, err := NewGatewayClient(g.serviceName, token, g.consul, nil)
-	if err != nil {
-		return nil, fmt.Errorf("init GatewayClient fail: %w", err)
-	}
-
-	headers := helper.GetHeaders(ctx)
-	resp, err := client.Call("GET", "/v1/user/"+userID, nil, headers)
-	if err != nil {
-		return nil, fmt.Errorf("Call API user fail: %w", err)
-	}
-
-	var user User
-	if err := json.Unmarshal(resp, &user); err != nil {
-		return nil, fmt.Errorf("encrypt response fail: %w", err)
-	}
-
-	return &user, nil
 }
 
 // GetCurrentUser
