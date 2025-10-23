@@ -512,13 +512,10 @@ func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context
 			Class:     0.0,
 			Topics:    topicsSlice,
 		})
+
 	}
 	if len(res.Classes) > 0 {
-		// tinh average topics
-		for i := range res.Classes {
-			res.Classes[i].AverageTopicsPercentage = u.calculateAverageTopics(res.Classes)
-		}
-		res.OverallClassesPercentage = u.calculateAverageOverview(res.Classes)
+		u.fillClassroomAverages(&res)
 	}
 
 	return &res, nil
@@ -581,23 +578,45 @@ func (u *reportWebUsecase) aggregateTopicsByClassroom(ctx context.Context, repor
 	return topicsByClass, nil
 }
 
-func (u *reportWebUsecase) calculateAverageOverview(classroomRps []response.ClassOverview) float32 {
-	var averageOverview float32
-	for i := range classroomRps {
-		averageOverview += classroomRps[i].AverageTopicsPercentage
-	}
-	return averageOverview
-}
+// Tính và gán average_topics_percentage cho từng lớp,
+// đồng thời tính overall_classes_percentage cho toàn bộ.
+func (u *reportWebUsecase) fillClassroomAverages(res *response.GetReportOverviewAllClassroomResponse4Web) {
+	var totalAvg float32
+	var classCount int
 
-func (u *reportWebUsecase) calculateAverageTopics(classroomRps []response.ClassOverview) float32 {
-	var averageTopics float32
-	for i := range classroomRps {
-		for j := range classroomRps[i].Topics {
-			averageTopics += classroomRps[i].Topics[j].MainPercentage
+	for i := range res.Classes {
+		avg := u.calculateAverageTopicsOfClass(res.Classes[i].Topics)
+		res.Classes[i].AverageTopicsPercentage = avg
+
+		if len(res.Classes[i].Topics) > 0 {
+			totalAvg += avg
+			classCount++
 		}
 	}
 
-	return averageTopics
+	if classCount > 0 {
+		res.OverallClassesPercentage = u.calculateOverallAverage(totalAvg, classCount)
+	}
+}
+
+// Tính trung bình main_percentage của 1 lớp
+func (u *reportWebUsecase) calculateAverageTopicsOfClass(topics []response.AllClassroomTopicStatus) float32 {
+	if len(topics) == 0 {
+		return 0
+	}
+	var sum float32
+	for _, t := range topics {
+		sum += t.MainPercentage
+	}
+	return sum / float32(len(topics))
+}
+
+// Tính trung bình chung của các lớp có topic
+func (u *reportWebUsecase) calculateOverallAverage(total float32, count int) float32 {
+	if count == 0 {
+		return 0
+	}
+	return total / float32(count)
 }
 
 // ===================================================== GetReportOverViewByClassroom4Web =====================================================//
@@ -617,7 +636,7 @@ func (u *reportWebUsecase) GetReportOverViewByClassroom4Web(ctx context.Context,
 		ClassName:    classroomAssignmentTemplate.ClassroomName,
 		ClassIconUrl: *classIconUrl,
 	}
-	return nil, nil
+	return res, nil
 }
 
 // ===================================================== GetReportOverViewByClassroom4Web =====================================================//
