@@ -48,7 +48,7 @@ func main() {
 	//db
 	db.ConnectMongoDB()
 
-	r := router.SetupRouter(consulClient, db.ReportCollection, db.ReportHistoryCollection, db.ReportPlanTemplateCollection)
+	r := router.SetupRouter(consulClient, db.ReportCollection, db.ReportHistoryCollection, db.ReportPlanTemplateCollection, db.ReportTranslateCollection)
 	port := cfg.Server.Port
 	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to run server:", err)

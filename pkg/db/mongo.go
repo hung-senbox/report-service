@@ -15,6 +15,7 @@ var MongoClient *mongo.Client
 var ReportCollection *mongo.Collection
 var ReportHistoryCollection *mongo.Collection
 var ReportPlanTemplateCollection *mongo.Collection
+var ReportTranslateCollection *mongo.Collection
 
 func ConnectMongoDB() {
 	d := config.AppConfig.Database.Mongo
@@ -50,5 +51,6 @@ func ConnectMongoDB() {
 	ReportCollection = MongoClient.Database(d.Name).Collection("reports")
 	ReportHistoryCollection = MongoClient.Database(d.Name).Collection("report_histories")
 	ReportPlanTemplateCollection = MongoClient.Database(d.Name).Collection("report_plan_template")
+	ReportTranslateCollection = MongoClient.Database(d.Name).Collection("report_translates")
 	log.Println("Connected to MongoDB and loaded 'reports' collection")
 }

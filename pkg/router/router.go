@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, reportHistoryCollection *mongo.Collection, reportPlanTemplateCollection *mongo.Collection) *gin.Engine {
+func SetupRouter(consulClient *api.Client, reportCollection, reportHistoryCollection, reportPlanTemplateCollection, reportTranslateCollection *mongo.Collection) *gin.Engine {
 	r := gin.Default()
 
 	// gateway
@@ -42,7 +42,12 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 	reportPlanTemplateService := service.NewReportPlanTemplateService(reportPlanTemplateRepo, userGateway)
 	reportPlanTemplateHandler := handler.NewReportPlanTemplateHandler(reportPlanTemplateService)
 
+	// report translate
+	reportTranslateRepo := repository.NewReportTranslateRepo(reportTranslateCollection)
+	reportTranslateService := service.NewReportTranslateService(reportTranslateRepo)
+	reportTranslateHandler := handler.NewReportTranslateHandler(reportTranslateService)
+
 	// Register routes
-	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler, reportPlanTemplateHandler)
+	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler, reportPlanTemplateHandler, reportTranslateHandler)
 	return r
 }

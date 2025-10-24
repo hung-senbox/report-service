@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.ReportHistoryHandler, rph *handler.ReportPlanTemplateHandler) {
+func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.ReportHistoryHandler, rph *handler.ReportPlanTemplateHandler, rth *handler.ReportTranslateHandler) {
 	// Admin routes
 	adminGroup := r.Group("/api/v1/admin")
 	adminGroup.Use(middleware.Secured())
@@ -30,6 +30,13 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 				reportsClassroomAdmin.POST("/templates/school/apply", h.ApplyTopicPlanTemplateIsSchool2Report)
 				reportsClassroomAdmin.POST("/templates/classroom/apply", h.ApplyTopicPlanTemplateIsClassroom2Report)
 				reportsClassroomAdmin.GET("/overview", h.GetReportOverViewByClassroom4Web)
+			}
+
+			// report translate
+			reportsTranslate := reportsAdmin.Group("/translate")
+			{
+				reportsTranslate.POST("", rth.UploadReportTranslate4Web)
+				reportsTranslate.GET("/topic/lang", rth.GetReportTranslate4WebByTopicAndLang)
 			}
 		}
 	}
