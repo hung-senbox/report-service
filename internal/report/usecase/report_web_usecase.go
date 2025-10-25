@@ -824,7 +824,7 @@ func (u *reportWebUsecase) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Con
 					EditorID:   editor.ID,
 				}
 
-				u.reportRepo.CreateOrUpdateClassroomView4Web(ctx, newReport)
+				u.reportRepo.Create(ctx, newReport)
 			} else {
 				report.ReportData = helper.ToBsonM(report.ReportData)
 
