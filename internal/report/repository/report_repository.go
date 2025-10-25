@@ -260,7 +260,7 @@ func (r *reportRepository) CreateOrUpdateStudentView4Web(ctx context.Context, re
 		}
 
 		for k, v := range subData {
-			if strings.HasPrefix(k, "manager_") || k == "status" || k == "color" {
+			if strings.HasPrefix(k, "manager_") || k == "status" || k == "color" || k == "teacher_report" {
 				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
 			}
 		}
@@ -307,7 +307,7 @@ func (r *reportRepository) CreateOrUpdateClassroomView4Web(ctx context.Context, 
 		}
 
 		for k, v := range subData {
-			if strings.HasPrefix(k, "manager_") || k == "status" {
+			if strings.HasPrefix(k, "manager_") || k == "status" || k == "color" || k == "teacher_report" {
 				update["$set"].(bson.M)[fmt.Sprintf("report_data.%s.%s", section, k)] = v
 			}
 		}
