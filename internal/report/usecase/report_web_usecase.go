@@ -7,7 +7,6 @@ import (
 	"report-service/helper"
 	"report-service/internal/gateway"
 	gw_request "report-service/internal/gateway/dto/request"
-	dto "report-service/internal/gateway/dto/response"
 	gw_response "report-service/internal/gateway/dto/response"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
@@ -107,10 +106,7 @@ func (u *reportWebUsecase) UploadReport4Web(ctx context.Context, req *request.Up
 }
 
 func (u *reportWebUsecase) GetReport4Web(ctx context.Context, req *request.GetReportRequest4Web) (response.ReportResponse, error) {
-	currentUser, err := u.userGw.GetCurrentUser(ctx)
-	if err != nil {
-		return response.ReportResponse{}, errors.New("get current user failed")
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	if currentUser.IsSuperAdmin {
 		return response.ReportResponse{}, errors.New("super admin can't get report")
@@ -235,10 +231,7 @@ func (u *reportWebUsecase) UploadClassroomReport4Web(ctx context.Context, req re
 // ===================================================== GetClassroomReports4Web =====================================================//
 func (u *reportWebUsecase) GetClassroomReports4Web(ctx context.Context, req request.GetClassroomReportRequest4Web) (*response.GetClassroomReportResponse4Web, error) {
 
-	currentUser, err := u.userGw.GetCurrentUser(ctx)
-	if err != nil || currentUser == nil {
-		return nil, fmt.Errorf("failed to get current user")
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	res := &response.GetClassroomReportResponse4Web{}
 
@@ -315,7 +308,7 @@ func (u *reportWebUsecase) getTemplateIfExists(getter func() (*model.ReportPlanT
 	}
 }
 
-func (u *reportWebUsecase) getStudentReport(ctx context.Context, req request.GetClassroomReportRequest4Web, student *dto.StudentResponse, teacher *dto.TeacherResponse) response.ReportResponse {
+func (u *reportWebUsecase) getStudentReport(ctx context.Context, req request.GetClassroomReportRequest4Web, student *gw_response.StudentResponse, teacher *gw_response.TeacherResponse) response.ReportResponse {
 
 	// get editor info
 	editor, _ := u.userGw.GetUserByTeacher(ctx, teacher.ID)
@@ -765,10 +758,7 @@ func (u *reportWebUsecase) GetReportOverViewByClassroom4Web(ctx context.Context,
 // ===================================================== GetReportOverViewByClassroom4Web =====================================================//
 
 func (u *reportWebUsecase) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Context, req request.ApplyTemplateIsSchoolToReportRequest) error {
-	currentUser, err := u.userGw.GetCurrentUser(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get current user")
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	if currentUser.IsSuperAdmin {
 		return errors.New("super admin cannot apply template to report")
@@ -831,10 +821,7 @@ func (u *reportWebUsecase) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Con
 }
 
 func (u *reportWebUsecase) ApplyTopicPlanTemplateIsClassroom2Report(ctx context.Context, req request.ApplyTemplateIsClassroomToReportRequest) error {
-	currentUser, err := u.userGw.GetCurrentUser(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get current user")
-	}
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
 
 	if currentUser.IsSuperAdmin {
 		return errors.New("super admin cannot apply template to report")
