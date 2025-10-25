@@ -114,11 +114,12 @@ func (c ContextKey) String() string {
 }
 
 var (
-	Token       ContextKey = "token"
-	UserID      ContextKey = "user_id"
-	UserName    ContextKey = "user_name"
-	UserRoles   ContextKey = "roles"
-	AppLanguage ContextKey = "app_language"
+	Token          ContextKey = "token"
+	UserID         ContextKey = "user_id"
+	UserName       ContextKey = "user_name"
+	CurrentUserKey ContextKey = "currentUser"
+	UserRoles      ContextKey = "roles"
+	AppLanguage    ContextKey = "app_language"
 )
 
 type TeacherReportTask string

@@ -48,6 +48,6 @@ func SetupRouter(consulClient *api.Client, reportCollection, reportHistoryCollec
 	reportTranslateHandler := handler.NewReportTranslateHandler(reportTranslateService)
 
 	// Register routes
-	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler, reportPlanTemplateHandler, reportTranslateHandler)
+	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler, reportPlanTemplateHandler, reportTranslateHandler, userGateway)
 	return r
 }

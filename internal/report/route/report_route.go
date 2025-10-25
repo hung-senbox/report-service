@@ -1,16 +1,17 @@
 package route
 
 import (
+	"report-service/internal/gateway"
 	"report-service/internal/middleware"
 	"report-service/internal/report/handler"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.ReportHistoryHandler, rph *handler.ReportPlanTemplateHandler, rth *handler.ReportTranslateHandler) {
+func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.ReportHistoryHandler, rph *handler.ReportPlanTemplateHandler, rth *handler.ReportTranslateHandler, userGw gateway.UserGateway) {
 	// Admin routes
 	adminGroup := r.Group("/api/v1/admin")
-	adminGroup.Use(middleware.Secured())
+	adminGroup.Use(middleware.Secured(userGw))
 	{
 		reportsAdmin := adminGroup.Group("/reports")
 		{
@@ -44,7 +45,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 
 	// user routes
 	userGroup := r.Group("/api/v1/user")
-	userGroup.Use(middleware.Secured())
+	userGroup.Use(middleware.Secured(userGw))
 	{
 		reportsUser := userGroup.Group("/reports")
 		{
