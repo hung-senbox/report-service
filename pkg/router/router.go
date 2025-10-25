@@ -43,6 +43,6 @@ func SetupRouter(consulClient *api.Client, reportCollection *mongo.Collection, r
 	reportPlanTemplateHandler := handler.NewReportPlanTemplateHandler(reportPlanTemplateService)
 
 	// Register routes
-	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler, reportPlanTemplateHandler)
+	route.RegisterReportRoutes(r, reportHandler, reportHistoryHandler, reportPlanTemplateHandler, userGateway)
 	return r
 }

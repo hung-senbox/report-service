@@ -8,6 +8,7 @@ import (
 	"report-service/internal/gateway"
 	gw_request "report-service/internal/gateway/dto/request"
 	dto "report-service/internal/gateway/dto/response"
+	gw_response "report-service/internal/gateway/dto/response"
 	"report-service/internal/report/dto/request"
 	"report-service/internal/report/dto/response"
 	"report-service/internal/report/mapper"
@@ -526,6 +527,14 @@ func (u *reportWebUsecase) GetReportOverViewAllClassroom4Web(ctx context.Context
 	if len(res.Classes) > 0 {
 		u.fillClassroomAverages(&res)
 	}
+
+	// get list all topics
+	currentUser, _ := ctx.Value(constants.CurrentUserKey).(*gw_response.CurrentUser)
+	allTopics, err := u.mediaGw.GetAllTopicsByOrganization(ctx, currentUser.OrganizationAdmin.ID)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get all topics: %v", err)
+	}
+	res.AllTopics = allTopics
 
 	return &res, nil
 }

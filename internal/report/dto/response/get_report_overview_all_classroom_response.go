@@ -1,5 +1,7 @@
 package response
 
+import gw_response "report-service/internal/gateway/dto/response"
+
 type AllClassroomTopicStatus struct {
 	TopicID           string  `json:"id"`
 	TopicTitle        string  `json:"title"`
@@ -21,6 +23,7 @@ type ClassOverview struct {
 }
 
 type GetReportOverviewAllClassroomResponse4Web struct {
-	OverallClassesPercentage float32         `json:"overall_classes_percentage"`
-	Classes                  []ClassOverview `json:"classes"`
+	OverallClassesPercentage float32                     `json:"overall_classes_percentage"`
+	Classes                  []ClassOverview             `json:"classes"`
+	AllTopics                []gw_response.TopicResponse `json:"all_topics"`
 }
