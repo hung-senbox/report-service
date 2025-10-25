@@ -37,6 +37,7 @@ func RegisterReportRoutes(r *gin.Engine, h *handler.ReportHandler, rh *handler.R
 			{
 				reportsTranslate.POST("", rth.UploadReportTranslate4Web)
 				reportsTranslate.GET("/topic/lang", rth.GetReportTranslate4WebByTopicAndLang)
+				reportsTranslate.GET("", rth.GetReportTranslate4WebByReport)
 			}
 		}
 	}

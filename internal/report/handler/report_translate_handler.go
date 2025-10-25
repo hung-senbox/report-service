@@ -52,3 +52,19 @@ func (h *ReportTranslateHandler) GetReportTranslate4WebByTopicAndLang(c *gin.Con
 	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", report)
 
 }
+
+func (h *ReportTranslateHandler) GetReportTranslate4WebByReport(c *gin.Context) {
+
+	studentID := c.Query("student_id")
+	lang := c.Query("lang_key")
+	termID := c.Query("term_id")
+	
+	report, err := h.ReportTranslateService.GetReportTranslate4WebByReport(c.Request.Context(), studentID, termID, lang)
+	if err != nil {
+		helper.SendError(c, http.StatusInternalServerError, err, helper.ErrInternal)
+		return
+	}
+
+	helper.SendSuccess(c, http.StatusOK, "Report retrieved successfully", report)
+
+}

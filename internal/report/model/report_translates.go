@@ -7,13 +7,13 @@ import (
 )
 
 type ReportTranslation struct {
-	ID           primitive.ObjectID               `bson:"_id,omitempty"`
-	StudentID    string                           `bson:"student_id"`
-	TopicID      string                           `bson:"topic_id"`
-	TermID       string                           `bson:"term_id"`
-	Translations map[string]ReportTranslationData `bson:"translations"`
-	CreatedAt    time.Time                        `bson:"created_at"`
-	UpdatedAt    time.Time                        `bson:"updated_at"`
+	ID           primitive.ObjectID               `json:"id" bson:"_id,omitempty"`
+	StudentID    string                           `json:"student_id" bson:"student_id"`
+	TopicID      string                           `json:"topic_id" bson:"topic_id"`
+	TermID       string                           `json:"term_id" bson:"term_id"`
+	Translations map[string]ReportTranslationData `json:"translations" bson:"translations"`
+	CreatedAt    time.Time                        `json:"created_at" bson:"created_at"`
+	UpdatedAt    time.Time                        `json:"updated_at" bson:"updated_at"`
 }
 
 type ReportTranslationData struct {

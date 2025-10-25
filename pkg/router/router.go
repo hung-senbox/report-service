@@ -44,7 +44,7 @@ func SetupRouter(consulClient *api.Client, reportCollection, reportHistoryCollec
 
 	// report translate
 	reportTranslateRepo := repository.NewReportTranslateRepo(reportTranslateCollection)
-	reportTranslateService := service.NewReportTranslateService(reportTranslateRepo)
+	reportTranslateService := service.NewReportTranslateService(reportTranslateRepo, mediaGateway)
 	reportTranslateHandler := handler.NewReportTranslateHandler(reportTranslateService)
 
 	// Register routes

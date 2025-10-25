@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"errors"
+	"report-service/internal/gateway"
 	"report-service/internal/report/dto/request"
+	"report-service/internal/report/dto/response"
 	"report-service/internal/report/model"
 	"report-service/internal/report/repository"
 	"time"
@@ -14,15 +16,18 @@ import (
 type ReportTranslateService interface {
 	UploadReportTranslate4Web(ctx context.Context, req request.UploadReportTranslateRequest) error
 	GetReportTranslate4WebByTopicAndLang(ctx context.Context, studentID, topicID, termID, lang string) (*model.ReportTranslationData, error)
+	GetReportTranslate4WebByReport(ctx context.Context, studentID, termID, lang string) ([]*response.ReportTranslateResponse, error)
 }
 
 type reportTranslateService struct {
 	ReportTranslateRepo repository.ReportTranslateRepo
+	TopicGateWay        gateway.MediaGateway
 }
 
-func NewReportTranslateService(repo repository.ReportTranslateRepo) ReportTranslateService {
+func NewReportTranslateService(repo repository.ReportTranslateRepo, TopicGateWay gateway.MediaGateway) ReportTranslateService {
 	return &reportTranslateService{
 		ReportTranslateRepo: repo,
+		TopicGateWay:        TopicGateWay,
 	}
 }
 
@@ -102,7 +107,7 @@ func (s *reportTranslateService) UploadReportTranslate4Web(ctx context.Context, 
 }
 
 func (s *reportTranslateService) GetReportTranslate4WebByTopicAndLang(ctx context.Context, studentID, topicID, termID, lang string) (*model.ReportTranslationData, error) {
-	
+
 	if studentID == "" {
 		return nil, errors.New("student id is required")
 	}
@@ -144,4 +149,50 @@ func (s *reportTranslateService) GetReportTranslate4WebByTopicAndLang(ctx contex
 	}
 
 	return &result, nil
+}
+
+func (s *reportTranslateService) GetReportTranslate4WebByReport(ctx context.Context, studentID, termID, lang string) ([]*response.ReportTranslateResponse, error) {
+
+	if studentID == "" {
+		return nil, errors.New("student id is required")
+	}
+
+	topics, err := s.TopicGateWay.GetTopicByStudentID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+	var result []*response.ReportTranslateResponse
+
+	for _, t := range topics {
+		reportTranslate, err := s.ReportTranslateRepo.FindByStudentTopicTerm(ctx, studentID, t.ID, termID)
+		if err != nil {
+			return nil, err
+		}
+
+		resp := &response.ReportTranslateResponse{
+			Topic: response.Topic{
+				ID:           t.ID,
+				Title:        t.Title,
+				MainImageUrl: t.MainImageUrl,
+			},
+			Translations: map[string]model.ReportTranslationData{},
+		}
+
+		if reportTranslate == nil {
+			result = append(result, resp)
+			continue
+		}
+
+		if lang != "" {
+			if data, ok := reportTranslate.Translations[lang]; ok {
+				resp.Translations[lang] = data
+			}
+		} else {
+			resp.Translations = reportTranslate.Translations
+		}
+
+		result = append(result, resp)
+	}
+
+	return result, nil
 }
