@@ -9,4 +9,5 @@ type GetTeacherReportTasksResponse4App struct {
 	Deadline    string                      `json:"deadline"`
 	Task        constants.TeacherReportTask `json:"task"`
 	Status      string                      `json:"status"`
+	Language    string                      `json:"language"`
 }

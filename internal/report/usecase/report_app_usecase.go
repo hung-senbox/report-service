@@ -186,6 +186,15 @@ func (u *reportAppUseCase) GetTeacherReportTasks4App(ctx context.Context) ([]res
 						stdName = student.Name
 					}
 
+					languageTask := ""
+					if r.Language == "english-united_kingdom" {
+						languageTask = "🇺🇸 English 🇬🇧 United Kingdom"
+					}
+
+					if r.Language == "vietnamese-ho_chi_minh" {
+						languageTask = "🇻🇳 Vietnamese 🇻🇳 Ho Chi Minh"
+					}
+
 					results = append(results, response.GetTeacherReportTasksResponse4App{
 						Term:        termTitle,
 						Topic:       topicTitle,
@@ -193,6 +202,7 @@ func (u *reportAppUseCase) GetTeacherReportTasks4App(ctx context.Context) ([]res
 						Deadline:    "empty",
 						Task:        constants.TeacherReportTask(key),
 						Status:      status,
+						Language:    languageTask,
 					})
 				}
 			}
