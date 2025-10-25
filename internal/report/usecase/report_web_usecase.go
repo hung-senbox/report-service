@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -781,39 +782,74 @@ func (u *reportWebUsecase) ApplyTopicPlanTemplateIsSchool2Report(ctx context.Con
 		return fmt.Errorf("failed to create report plan template: %w", err)
 	}
 
-	// Lấy danh sách reports theo term, topic, language
-	reports, err := u.reportRepo.GetTopicsByTermTopicLanguage(ctx, req.TermID, req.TopicID, req.UniqueLangKey)
-	if err != nil {
-		return fmt.Errorf("failed to get reports")
-	}
-	if len(reports) == 0 {
-		return errors.New("no reports found to apply template")
-	}
-
-	// Áp dụng template cho từng report
-	for _, report := range reports {
-		report.ReportData = helper.ToBsonM(report.ReportData)
-
-		// --- Chuẩn bị dữ liệu template ---
-		title := helper.ToBsonM(report.ReportData["title"])
-		title["content"] = req.Title
-		report.ReportData["title"] = title
-
-		intro := helper.ToBsonM(report.ReportData["introduction"])
-		intro["content"] = req.Introduction
-		report.ReportData["introduction"] = intro
-
-		cur := helper.ToBsonM(report.ReportData["curriculum_area"])
-		cur["content"] = req.CurriculumArea
-		report.ReportData["curriculum_area"] = cur
-
-		// --- Gọi repository update ---
-		if err := u.reportRepo.ApplyTopicPlanTemplate(ctx, report); err != nil {
-			// nếu không tìm thấy report thì bỏ qua
-			if strings.Contains(err.Error(), "report not found") {
-				continue
+	// get all classroom assignment template
+	allClassroomAssignmentTemplate, _ := u.classroomGw.GetAllClassroomAssignTemplate(ctx, req.TermID)
+	for _, assign := range allClassroomAssignmentTemplate {
+		for _, at := range assign.AssignTemplates {
+			// get editor form teacher id
+			editor, _ := u.userGw.GetUserByTeacher(ctx, at.TeacherID)
+			if editor == nil {
+				return errors.New("get editor failed")
 			}
-			return fmt.Errorf("failed to apply template to report")
+
+			// get report
+			report, _ := u.reportRepo.GetByStudentTopicTermLanguageAndEditor(
+				ctx,
+				at.StudentID,
+				req.TopicID,
+				req.TermID,
+				req.UniqueLangKey,
+				editor.ID,
+			)
+
+			if report == nil {
+				// tao moi report neu chua co theo template
+				reportData := bson.M{
+					"title": bson.M{
+						"content": req.Title,
+					},
+					"introduction": bson.M{
+						"content": req.Introduction,
+					},
+					"curriculum_area": bson.M{
+						"content": req.CurriculumArea,
+					},
+				}
+				newReport := &model.Report{
+					StudentID:  at.StudentID,
+					TopicID:    req.TopicID,
+					TermID:     req.TermID,
+					Language:   req.UniqueLangKey,
+					ReportData: reportData,
+					EditorID:   editor.ID,
+				}
+
+				u.reportRepo.CreateOrUpdateClassroomView4Web(ctx, newReport)
+			} else {
+				report.ReportData = helper.ToBsonM(report.ReportData)
+
+				// --- Chuẩn bị dữ liệu template ---
+				title := helper.ToBsonM(report.ReportData["title"])
+				title["content"] = req.Title
+				report.ReportData["title"] = title
+
+				intro := helper.ToBsonM(report.ReportData["introduction"])
+				intro["content"] = req.Introduction
+				report.ReportData["introduction"] = intro
+
+				cur := helper.ToBsonM(report.ReportData["curriculum_area"])
+				cur["content"] = req.CurriculumArea
+				report.ReportData["curriculum_area"] = cur
+
+				// --- Gọi repository update ---
+				if err := u.reportRepo.ApplyTopicPlanTemplate(ctx, report); err != nil {
+					// nếu không tìm thấy report thì bỏ qua
+					if strings.Contains(err.Error(), "report not found") {
+						continue
+					}
+					return fmt.Errorf("failed to apply template to report")
+				}
+			}
 		}
 	}
 
